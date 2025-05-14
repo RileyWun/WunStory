@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Draggable Chat Canvas</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      font-family: sans-serif;
+    }
+    #chatInput {
+      position: absolute;
+      bottom: 140px;
+      left: 20px;
+      width: 300px;
+      padding: 5px;
+      font-size: 14px;
+      z-index: 100;
+    }
+  </style>
+</head>
+<body>
+  <input type="text" id="chatInput" placeholder="Type a message..." />
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
