@@ -1,4 +1,3 @@
-<<<<<<< chat-layout-fix
 const config = {
   type: Phaser.AUTO,
   width: window.innerWidth,
@@ -171,6 +170,3 @@ function showOtherPlayerReply(scene, text) {
     yoyo: true
   });
 }
-=======
-// Placeholder for game logic
->>>>>>> main
