@@ -10,16 +10,15 @@
       height: 100%;
       width: 100%;
       font-family: sans-serif;
-      background: #000;
       display: flex;
       flex-direction: column;
+      background: #000;
     }
     #gameContainer {
       width: 100%;
       height: 600px;
-      background-color: black;
+      background: #000;
       flex-shrink: 0;
-      overflow: hidden;
     }
     #chatToggle {
       background: #333;
@@ -88,10 +87,6 @@
         width: window.innerWidth,
         height: 600,
         parent: 'gameContainer',
-        scale: {
-          mode: Phaser.Scale.FIT,
-          autoCenter: Phaser.Scale.CENTER_BOTH
-        },
         physics: {
           default: 'arcade',
           arcade: {
@@ -99,14 +94,18 @@
             debug: false
           }
         },
+        scale: {
+          mode: Phaser.Scale.FIT,
+          autoCenter: Phaser.Scale.CENTER_BOTH
+        },
         scene: {}
       };
+    });
 
-      const toggleBtn = document.getElementById('chatToggle');
-      const chatPanel = document.getElementById('chatPanel');
-      toggleBtn.addEventListener('click', () => {
-        chatPanel.style.display = chatPanel.style.display === 'none' ? 'flex' : 'none';
-      });
+    const toggleBtn = document.getElementById('chatToggle');
+    const chatPanel = document.getElementById('chatPanel');
+    toggleBtn.addEventListener('click', () => {
+      chatPanel.style.display = chatPanel.style.display === 'none' ? 'flex' : 'none';
     });
   </script>
   <script src="game.js"></script>
