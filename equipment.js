@@ -32,7 +32,7 @@ function initEquipmentUI(scene) {
     zone.accepts = slot.accepts;
     zone.setTint(0x333333);
 
-    scene.input.setDropZone(zone);
+    zone.input.dropZone = true;
 
     zone.on("pointerover", () => zone.setTint(0x666666));
     zone.on("pointerout", () => zone.setTint(0x333333));
