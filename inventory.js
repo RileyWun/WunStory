@@ -10,7 +10,6 @@ function initInventoryUI(scene) {
   const bg = scene.add.rectangle(0, 20, 200, 180, 0x222222, 0.95).setOrigin(0);
   inventoryContainer.add(bg);
 
-  // Items
   const items = ["item_sword", "item_potion", "item_shirt"];
   items.forEach((key, i) => {
     const icon = scene.add.image(20 + (i % 4) * 45, 40 + Math.floor(i / 4) * 45, key)
@@ -19,9 +18,12 @@ function initInventoryUI(scene) {
     inventoryContainer.add(icon);
   });
 
-  // Title bar outside container
-  titleBar = scene.add.rectangle(100, 100, 200, 20, 0x111111, 1).setOrigin(0).setInteractive().setScrollFactor(0);
+  // Title bar
+  titleBar = scene.add.rectangle(100, 100, 200, 20, 0x111111, 1).setOrigin(0).setInteractive();
+  titleBar.setDepth(999).setScrollFactor(0);
   scene.input.setDraggable(titleBar);
+  titleBar.input && (titleBar.input.cursor = 'pointer');
+
   scene.input.on("drag", (pointer, gameObject, dragX, dragY) => {
     if (gameObject === titleBar) {
       inventoryContainer.setPosition(dragX, dragY);
@@ -30,22 +32,24 @@ function initInventoryUI(scene) {
     }
   });
 
-  // Close button outside container
+  // Close button
   closeButton = scene.add.text(280, 100, "✖", {
     fontSize: "14px",
     fill: "#fff",
     backgroundColor: "#900",
     padding: { left: 4, right: 4, top: 1, bottom: 1 }
-  }).setOrigin(0).setInteractive({ useHandCursor: true }).setScrollFactor(0);
+  }).setOrigin(0).setInteractive({ useHandCursor: true });
+  closeButton.setDepth(999).setScrollFactor(0);
 
   closeButton.on("pointerdown", () => {
+    console.log("✖ clicked");
     inventoryContainer.setVisible(false);
     titleBar.setVisible(false);
     closeButton.setVisible(false);
     inventoryOpen = false;
   });
 
-  // Toggle inventory
+  // Toggle inventory panel
   scene.input.keyboard.on("keydown-I", () => {
     inventoryOpen = !inventoryOpen;
     inventoryContainer.setVisible(inventoryOpen);
