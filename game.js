@@ -14,8 +14,9 @@ const config = {
   scene: { preload, create, update }
 };
 
-let player, cursors, spaceBar, fireballs;
-let otherPlayer;
+let player, otherPlayer;
+let cursors, spaceBar, fireballs;
+let playerNameText, otherNameText;
 let playerName = prompt("Enter your name:") || "Player";
 
 const game = new Phaser.Game(config);
@@ -40,25 +41,72 @@ function create() {
     ground.create(x + 200, 1784, "ground").setScale(2).refreshBody();
   }
 
+  // Player setup
   player = this.physics.add.sprite(100, 450, "character");
   player.setBounce(0.1);
   player.setCollideWorldBounds(true);
-  this.physics.add.collider(player, ground);
-  this.cameras.main.startFollow(player, true, 0.08, 0.08);
+  player.body.checkCollision.left = false;
+  player.body.checkCollision.right = false;
 
-  this.anims.create({ key: "left", frames: this.anims.generateFrameNumbers("character", { start: 0, end: 3 }), frameRate: 10, repeat: -1 });
-  this.anims.create({ key: "turn", frames: [ { key: "character", frame: 4 } ], frameRate: 20 });
-  this.anims.create({ key: "right", frames: this.anims.generateFrameNumbers("character", { start: 5, end: 8 }), frameRate: 10, repeat: -1 });
+  playerNameText = this.add.text(player.x, player.y - 40, playerName, {
+    fontSize: "14px",
+    fill: "#fff",
+    stroke: "#000",
+    strokeThickness: 2
+  }).setOrigin(0.5);
+
+  // Other player setup
+  otherPlayer = this.physics.add.sprite(300, 450, "character");
+  otherPlayer.setBounce(0.1);
+  otherPlayer.setCollideWorldBounds(true);
+  otherPlayer.body.checkCollision.left = false;
+  otherPlayer.body.checkCollision.right = false;
+
+  otherNameText = this.add.text(otherPlayer.x, otherPlayer.y - 40, "OtherPlayer", {
+    fontSize: "14px",
+    fill: "#fff",
+    stroke: "#000",
+    strokeThickness: 2
+  }).setOrigin(0.5);
+
+  this.physics.add.collider(player, ground);
+  this.physics.add.collider(otherPlayer, ground);
+
+  // Allow standing on each other but not blocking side-to-side movement
+  this.physics.add.collider(player, otherPlayer, (p1, p2) => {
+    if (p1.body.touching.down && p2.body.touching.up) {
+      // p1 lands on p2
+    } else if (p2.body.touching.down && p1.body.touching.up) {
+      // p2 lands on p1
+    }
+  });
+
+  // Animation
+  this.anims.create({
+    key: "left",
+    frames: this.anims.generateFrameNumbers("character", { start: 0, end: 3 }),
+    frameRate: 10,
+    repeat: -1
+  });
+
+  this.anims.create({
+    key: "turn",
+    frames: [ { key: "character", frame: 4 } ],
+    frameRate: 20
+  });
+
+  this.anims.create({
+    key: "right",
+    frames: this.anims.generateFrameNumbers("character", { start: 5, end: 8 }),
+    frameRate: 10,
+    repeat: -1
+  });
 
   cursors = this.input.keyboard.createCursorKeys();
   spaceBar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
   fireballs = this.physics.add.group();
 
-  // Simulated other player
-  otherPlayer = this.physics.add.sprite(300, 450, "character");
-  otherPlayer.setBounce(0.1);
-  otherPlayer.setCollideWorldBounds(true);
-  this.physics.add.collider(otherPlayer, ground);
+  this.cameras.main.startFollow(player, true, 0.08, 0.08);
 }
 
 function update() {
@@ -85,4 +133,8 @@ function update() {
     fb.body.allowGravity = false;
     setTimeout(() => fb.destroy(), 2000);
   }
+
+  // Update name text positions
+  playerNameText.setPosition(player.x, player.y - 40);
+  otherNameText.setPosition(otherPlayer.x, otherPlayer.y - 40);
 }
