@@ -1,51 +1,90 @@
-
 let inventoryContainer;
 let inventoryOpen = false;
 let titleBar, closeButton;
+let items = [
+  { key: "item_hat_red", type: "hat" },
+  { key: "item_potion", type: "potion" },
+  { key: "item_top_blue", type: "top" },
+  { key: "item_sword", type: "weapon" }
+];
+
+const itemData = {
+  "item_hat_red": { name: "Red Hat", type: "hat" },
+  "item_potion": { name: "Health Potion", type: "potion" },
+  "item_top_blue": { name: "Blue Shirt", type: "top" },
+  "item_sword": { name: "Sword", type: "weapon" }
+};
 
 function initInventoryUI(scene) {
-  inventoryContainer = scene.add.container(100, 120).setScrollFactor(0).setDepth(10).setVisible(false);
-  inventoryContainer.setSize(200, 200);
+  // Create container
+  inventoryContainer = scene.add.container(100, 120)
+    .setScrollFactor(0)
+    .setDepth(10)
+    .setVisible(false);
+  const width = 200, height = 200;
+  inventoryContainer.setSize(width, height);
 
-  const bg = scene.add.rectangle(0, 0, 200, 180, 0x222222, 0.95).setOrigin(0);
+  // Background under title bar
+  const bg = scene.add.rectangle(0, 20, width, height - 20, 0x222222, 0.95).setOrigin(0);
   inventoryContainer.add(bg);
 
-  const items = ["item_sword", "item_potion", "item_shirt"];
-  items.forEach((key, i) => {
-    const icon = scene.add.image(20 + (i % 4) * 45, 20 + Math.floor(i / 4) * 45, key)
-      .setOrigin(0)
-      .setScale(1.2);
-    inventoryContainer.add(icon);
-  });
-
   // Title bar
-  titleBar = scene.add.rectangle(100, 100, 200, 20, 0x111111, 1).setOrigin(0).setInteractive();
-  titleBar.setDepth(999).setScrollFactor(0).setVisible(false);
-  scene.input.setDraggable(titleBar);
-  titleBar.input && (titleBar.input.cursor = 'pointer');
-
-  scene.input.on("drag", (pointer, gameObject, dragX, dragY) => {
-    if (gameObject === titleBar) {
-      inventoryContainer.setPosition(dragX, dragY + 20); // shift panel content below title bar
-      titleBar.setPosition(dragX, dragY);
-      closeButton.setPosition(dragX + 180, dragY);
-    }
-  });
+  titleBar = scene.add.rectangle(0, 0, width, 20, 0x111111)
+    .setOrigin(0)
+    .setInteractive({ useHandCursor: true });
+  inventoryContainer.add(titleBar);
 
   // Close button
-  closeButton = scene.add.text(280, 100, "✖", {
-    fontSize: "14px",
-    fill: "#fff",
-    backgroundColor: "#900",
+  closeButton = scene.add.text(width - 20, 2, "✖", {
+    fontSize: "14px", fill: "#fff", backgroundColor: "#900",
     padding: { left: 4, right: 4, top: 1, bottom: 1 }
   }).setOrigin(0).setInteractive({ useHandCursor: true });
-  closeButton.setDepth(999).setScrollFactor(0).setVisible(false);
+  inventoryContainer.add(closeButton);
 
   closeButton.on("pointerdown", () => {
+    inventoryOpen = false;
     inventoryContainer.setVisible(false);
     titleBar.setVisible(false);
     closeButton.setVisible(false);
-    inventoryOpen = false;
+  });
+
+  // Dragging logic
+  scene.input.setDraggable(titleBar);
+  scene.input.on("drag", (pointer, gameObject, dragX, dragY) => {
+    if (gameObject === titleBar) {
+      inventoryContainer.setPosition(dragX, dragY + 20);
+      titleBar.setPosition(dragX, dragY);
+      closeButton.setPosition(dragX + width - 20, dragY);
+    }
+  });
+
+  // Render items
+  items.forEach((item, i) => {
+    const sprite = scene.add.image(20 + (i % 4) * 45, 30 + Math.floor(i / 4) * 45, item.key)
+      .setOrigin(0)
+      .setScale(1.2)
+      .setInteractive({ draggable: true, useHandCursor: true });
+    sprite.itemKey = item.key;
+    sprite.itemType = item.type;
+
+    // Enable dragging
+    scene.input.setDraggable(sprite);
+
+    sprite.on("dragstart", () => sprite.setScale(1.3));
+    sprite.on("dragend", () => sprite.setScale(1.2));
+
+    // Double-click detection
+    sprite.on("pointerup", (pointer) => {
+      if (pointer.event.detail === 2) {
+        if (item.type === "potion") {
+          console.log(`Used ${itemData[item.key].name}`);
+        } else {
+          attemptEquip(item.key, item.type);
+        }
+      }
+    });
+
+    inventoryContainer.add(sprite);
   });
 
   // Toggle inventory
@@ -55,8 +94,20 @@ function initInventoryUI(scene) {
     titleBar.setVisible(inventoryOpen);
     closeButton.setVisible(inventoryOpen);
 
-    const pos = inventoryContainer.getBounds();
-    titleBar.setPosition(pos.x, pos.y - 20);
-    closeButton.setPosition(pos.x + 180, pos.y - 20);
+    if (inventoryOpen) {
+      const pos = inventoryContainer.getBounds();
+      titleBar.setPosition(pos.x, pos.y - 20);
+      closeButton.setPosition(pos.x + width - 20, pos.y - 20);
+    }
+  });
+}
+
+function attemptEquip(itemKey, itemType) {
+  if (!window.equipmentSlots) return;
+  window.equipmentSlots.forEach(slot => {
+    if (slot.accepts === itemType) {
+      slot.setTextures && slot.setTextures(itemKey); // if zone supports texture
+      console.log(`Equipped ${itemKey} to ${slot.slotName}`);
+    }
   });
 }
