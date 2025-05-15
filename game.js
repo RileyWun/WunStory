@@ -160,9 +160,10 @@ function update() {
   }
 
   // Sync layer positions
-  [bodyLayer, shirtLayer, pantsLayer].forEach(layer => {
-    layer.setPosition(player.x, player.y);
-  });
+const { x, y } = player.body.position;
+[bodyLayer, shirtLayer, pantsLayer].forEach(layer => {
+  layer.setPosition(x + player.width / 2, y + player.height / 2);
+});
 
   // Animate layers
   const shirtKey = localStorage.getItem("shirtColor");
