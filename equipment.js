@@ -2,7 +2,6 @@
 let equipmentContainer;
 let equipmentOpen = false;
 let equipTitleBar, equipCloseButton;
-window.equipmentSlots = [];
 
 function initEquipmentUI(scene) {
   equipmentContainer = scene.add.container(350, 120).setScrollFactor(0).setDepth(10).setVisible(false);
@@ -11,39 +10,29 @@ function initEquipmentUI(scene) {
   const bg = scene.add.rectangle(0, 0, 220, 260, 0x1c1c1c, 0.95).setOrigin(0);
   equipmentContainer.add(bg);
 
-  // Player preview (placeholder rectangle)
+  // Player preview (mock sprite)
   const playerPreview = scene.add.rectangle(110, 100, 40, 60, 0xaaaaaa, 1).setOrigin(0.5);
   equipmentContainer.add(playerPreview);
 
-  // Equipment slots with labels and drop zones
+  // Equipment slot labels (could be images later)
   const slots = [
-    { slotName: "hat", x: 110, y: 10, accepts: "hat" },
-    { slotName: "face", x: 110, y: 35, accepts: "face" },
-    { slotName: "top", x: 30, y: 100, accepts: "top" },
-    { slotName: "bottom", x: 30, y: 130, accepts: "bottom" },
-    { slotName: "shoes", x: 30, y: 160, accepts: "shoes" },
-    { slotName: "gloves", x: 190, y: 100, accepts: "gloves" },
-    { slotName: "weapon", x: 190, y: 140, accepts: "weapon" }
+    { label: "Hat", x: 110, y: 10 },
+    { label: "Face", x: 110, y: 35 },
+    { label: "Top", x: 30, y: 100 },
+    { label: "Bottom", x: 30, y: 130 },
+    { label: "Shoes", x: 30, y: 160 },
+    { label: "Gloves", x: 190, y: 100 },
+    { label: "Weapon", x: 190, y: 140 }
   ];
 
   slots.forEach(slot => {
-    const zone = scene.add.image(slot.x, slot.y, "").setOrigin(0.5);
-    zone.setDisplaySize(32, 32);
-    zone.setInteractive();
-    zone.slotName = slot.slotName;
-    zone.accepts = slot.accepts;
-    zone.setTint(0x333333);
-
-    scene.input.setDropZone(zone);
-
-    zone.on("pointerover", () => zone.setTint(0x666666));
-    zone.on("pointerout", () => zone.setTint(0x333333));
-
-    equipmentContainer.add(zone);
-    window.equipmentSlots.push(zone);
+    const text = scene.add.text(slot.x, slot.y, slot.label, {
+      fontSize: "12px", fill: "#fff"
+    }).setOrigin(0.5);
+    equipmentContainer.add(text);
   });
 
-  // Title bar
+  // Title bar (drag area)
   equipTitleBar = scene.add.rectangle(350, 100, 220, 20, 0x111111, 1).setOrigin(0).setInteractive();
   equipTitleBar.setDepth(999).setScrollFactor(0).setVisible(false);
   scene.input.setDraggable(equipTitleBar);
@@ -71,18 +60,6 @@ function initEquipmentUI(scene) {
     equipTitleBar.setVisible(false);
     equipCloseButton.setVisible(false);
     equipmentOpen = false;
-  });
-
-  // Drop handler
-  scene.input.on("drop", (pointer, gameObject, dropZone) => {
-    if (!dropZone || !dropZone.accepts || !gameObject.itemType) return;
-    if (dropZone.accepts === gameObject.itemType) {
-      dropZone.setTexture(gameObject.itemKey);
-      dropZone.itemKey = gameObject.itemKey;
-      console.log(`Equipped ${gameObject.itemKey} to ${dropZone.slotName}`);
-    } else {
-      console.log(`Can't equip ${gameObject.itemKey} to ${dropZone.slotName}`);
-    }
   });
 
   // Toggle panel with E key
