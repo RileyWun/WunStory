@@ -4,48 +4,46 @@ let equipmentOpen = false;
 window.equipmentSlots = [];
 
 function initEquipmentUI(scene) {
-  equipmentContainer = scene.add.container(350, 120).setScrollFactor(0).setDepth(10).setVisible(false);
-  equipmentContainer.setSize(260, 320);
+  const width = 260, height = 320;
+  equipmentContainer = scene.add.container(350, 120)
+    .setScrollFactor(0)
+    .setDepth(10)
+    .setVisible(false);
+  equipmentContainer.setSize(width, height);
 
-  const bg = scene.add.rectangle(0, 0, 260, 320, 0x1c1c1c, 0.95).setOrigin(0);
+  // Background panel
+  const bg = scene.add.rectangle(0, 0, width, height, 0x1c1c1c, 0.95).setOrigin(0);
   equipmentContainer.add(bg);
 
-  const titleBar = scene.add.rectangle(0, 0, 260, 20, 0x111111).setOrigin(0).setInteractive();
-  titleBar.input.cursor = "pointer";
-  equipmentContainer.add(titleBar);
-  scene.input.setDraggable(titleBar);
-
-  const closeButton = scene.add.text(238, 2, "✖", {
-    fontSize: "14px", fill: "#fff", backgroundColor: "#900",
+  // Close button
+  const closeBtn = scene.add.text(width - 20, 2, "✖", {
+    fontSize: "14px",
+    fill: "#fff",
+    backgroundColor: "#900",
     padding: { left: 4, right: 4, top: 1, bottom: 1 }
   }).setOrigin(0).setInteractive({ useHandCursor: true });
-  equipmentContainer.add(closeButton);
-
-  closeButton.on("pointerdown", () => {
-    equipmentContainer.setVisible(false);
+  closeBtn.on("pointerdown", () => {
     equipmentOpen = false;
+    equipmentContainer.setVisible(false);
   });
+  equipmentContainer.add(closeBtn);
 
-  // Fix drag: move the whole container when dragging titleBar only
-  scene.input.on("drag", (pointer, gameObject, dragX, dragY) => {
-    if (gameObject === titleBar) {
-      equipmentContainer.setPosition(dragX, dragY);
-    }
-  });
-
-  const preview = scene.add.rectangle(130, 140, 40, 60, 0xaaaaaa).setOrigin(0.5);
+  // Player preview
+  const preview = scene.add.rectangle(width / 2, height / 2, 40, 60, 0xaaaaaa).setOrigin(0.5);
   equipmentContainer.add(preview);
 
+  // Define slot positions
   const slots = [
-    { slotName: "hat", x: 130, y: 30, accepts: "hat" },
-    { slotName: "face", x: 130, y: 60, accepts: "face" },
-    { slotName: "top", x: 40, y: 110, accepts: "top" },
-    { slotName: "bottom", x: 40, y: 140, accepts: "bottom" },
-    { slotName: "shoes", x: 40, y: 170, accepts: "shoes" },
-    { slotName: "gloves", x: 220, y: 110, accepts: "gloves" },
-    { slotName: "weapon", x: 220, y: 150, accepts: "weapon" }
+    { slotName: "hat", x: width / 2, y: 50, accepts: "hat" },
+    { slotName: "face", x: width / 2, y: 80, accepts: "face" },
+    { slotName: "top", x: 60, y: 140, accepts: "top" },
+    { slotName: "bottom", x: 60, y: 180, accepts: "bottom" },
+    { slotName: "shoes", x: 60, y: 220, accepts: "shoes" },
+    { slotName: "gloves", x: width - 60, y: 140, accepts: "gloves" },
+    { slotName: "weapon", x: width - 60, y: 180, accepts: "weapon" }
   ];
 
+  // Create slots
   slots.forEach(slot => {
     const zone = scene.add.rectangle(slot.x, slot.y, 32, 32, 0x444444, 0.8)
       .setOrigin(0.5)
@@ -56,15 +54,24 @@ function initEquipmentUI(scene) {
     equipmentContainer.add(zone);
     window.equipmentSlots.push(zone);
 
-    const label = scene.add.text(slot.x, slot.y + 18, slot.slotName.toUpperCase(), {
-      fontSize: "10px", fill: "#ccc"
+    const label = scene.add.text(slot.x, slot.y + 22, slot.slotName.toUpperCase(), {
+      fontSize: "10px",
+      fill: "#ccc"
     }).setOrigin(0.5);
     equipmentContainer.add(label);
   });
 
-  // Handle item drop
+  // Enable dragging the container
+  scene.input.setDraggable(equipmentContainer);
+  scene.input.on("drag", (pointer, gameObject, dragX, dragY) => {
+    if (gameObject === equipmentContainer) {
+      equipmentContainer.setPosition(dragX, dragY);
+    }
+  });
+
+  // Handle drop events
   scene.input.on("drop", (pointer, gameObject, dropZone) => {
-    if (!dropZone || !dropZone.accepts || !gameObject.itemType) return;
+    if (!dropZone.accepts || !gameObject.itemType) return;
     if (dropZone.accepts === gameObject.itemType) {
       const icon = scene.make.image({
         x: dropZone.x,
@@ -77,6 +84,7 @@ function initEquipmentUI(scene) {
     }
   });
 
+  // Toggle with E key
   scene.input.keyboard.on("keydown-E", () => {
     equipmentOpen = !equipmentOpen;
     equipmentContainer.setVisible(equipmentOpen);
