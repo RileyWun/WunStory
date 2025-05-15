@@ -106,22 +106,37 @@ function create() {
 
   this.cameras.main.startFollow(player, true, 0.08, 0.08);
 
-  // Inventory UI
-  inventoryContainer = this.add.container(100, 100).setScrollFactor(0).setDepth(10).setVisible(false);
+// Inventory UI
+inventoryContainer = this.add.container(100, 100).setScrollFactor(0).setDepth(10).setVisible(false);
 
-  const bg = this.add.rectangle(0, 0, 200, 200, 0x222222, 0.9).setOrigin(0);
-  bg.setInteractive({ draggable: true });
-  bg.on("drag", (pointer, dragX, dragY) => inventoryContainer.setPosition(dragX, dragY));
-  inventoryContainer.add(bg);
+// Background
+const bg = this.add.rectangle(0, 0, 200, 200, 0x222222, 0.9).setOrigin(0);
+inventoryContainer.add(bg);
 
-  const closeText = this.add.text(180, 0, "✖", {
-    fontSize: "16px", fill: "#fff"
-  }).setInteractive();
-  closeText.on("pointerdown", () => {
-    inventoryContainer.setVisible(false);
-    inventoryOpen = false;
-  });
-  inventoryContainer.add(closeText);
+// Close button
+const closeText = this.add.text(180, 0, "✖", {
+  fontSize: "16px", fill: "#fff", backgroundColor: "#900", padding: { left: 4, right: 4 }
+}).setOrigin(0);
+closeText.setInteractive();
+closeText.on("pointerdown", () => {
+  inventoryContainer.setVisible(false);
+  inventoryOpen = false;
+});
+inventoryContainer.add(closeText);
+
+// Items
+items.forEach((key, i) => {
+  const icon = this.add.image(20 + (i % 4) * 45, 40 + Math.floor(i / 4) * 45, key).setOrigin(0).setScale(1.2);
+  inventoryContainer.add(icon);
+});
+
+// Enable dragging the full container
+this.input.setDraggable(inventoryContainer);
+this.input.on("drag", (pointer, gameObject, dragX, dragY) => {
+  if (gameObject === inventoryContainer) {
+    inventoryContainer.setPosition(dragX, dragY);
+  }
+});
 
   // Mock items
   items.forEach((key, i) => {
