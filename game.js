@@ -1,7 +1,7 @@
 const config = {
   type: Phaser.AUTO,
   width: window.innerWidth,
-  height: 600,
+  height: 800,
   parent: 'gameContainer',
   physics: {
     default: 'arcade',
@@ -15,14 +15,12 @@ const config = {
 };
 
 let player, otherPlayer;
-let cursors, spaceBar, fireballs;
 let playerNameText, otherNameText;
-let playerName = '';
-let playerSkin = '';
-let selectedSpriteKey = '';
-let characterOptions = ['blue', 'green', 'red'];
+let cursors, spaceBar, fireballs;
+let playerName, playerSkin;
 let selectorMode = false;
 let selectorSprites = [];
+const characterOptions = ['blue', 'green', 'red'];
 
 const game = new Phaser.Game(config);
 
@@ -40,8 +38,14 @@ function preload() {
 }
 
 function create() {
-  playerName = localStorage.getItem("playerName") || prompt("Enter your name:") || "Player";
+  // Load name and skin if already chosen
+  playerName = localStorage.getItem("playerName");
   playerSkin = localStorage.getItem("playerSkin");
+
+  if (!playerName) {
+    playerName = prompt("Enter your name:") || "Player";
+    localStorage.setItem("playerName", playerName);
+  }
 
   if (!playerSkin) {
     selectorMode = true;
@@ -52,15 +56,16 @@ function create() {
       this.add.text(150 + i * 150, 250, color.toUpperCase(), { fontSize: '14px', fill: '#fff' }).setOrigin(0.5);
       sprite.on('pointerdown', () => {
         localStorage.setItem("playerSkin", color);
-        playerSkin = color;
-        this.scene.restart();  // reload scene with new skin
+        selectorMode = false;
+        this.scene.restart();
       });
       selectorSprites.push(sprite);
     });
     return;
   }
 
-  // World setup
+  const spriteKey = `character_${playerSkin}`;
+
   this.add.tileSprite(0, 0, 2400, 1800, "background").setOrigin(0);
   this.physics.world.setBounds(0, 0, 2400, 1800);
   this.cameras.main.setBounds(0, 0, 2400, 1800);
@@ -70,44 +75,49 @@ function create() {
     ground.create(x + 200, 1784, "ground").setScale(2).refreshBody();
   }
 
-  selectedSpriteKey = `character_${playerSkin}`;
-
   // Player setup
-  player = this.physics.add.sprite(100, 450, selectedSpriteKey);
+  player = this.physics.add.sprite(100, 450, spriteKey);
   player.setBounce(0.1);
   player.setCollideWorldBounds(true);
   player.body.checkCollision.left = false;
   player.body.checkCollision.right = false;
 
-  playerNameText = this.add.text(player.x, player.y - 40, playerName, {
-    fontSize: "14px", fill: "#fff", stroke: "#000", strokeThickness: 2
-  }).setOrigin(0.5);
+  playerNameText = this.add.text(0, 0, playerName, {
+    fontSize: "14px",
+    fill: "#fff",
+    stroke: "#000",
+    strokeThickness: 2
+  }).setOrigin(0.5).setScrollFactor(1);
 
-  // Other player
+  // Simulated other player
   otherPlayer = this.physics.add.sprite(300, 450, "character_red");
   otherPlayer.setBounce(0.1);
   otherPlayer.setCollideWorldBounds(true);
   otherPlayer.body.checkCollision.left = false;
   otherPlayer.body.checkCollision.right = false;
 
-  otherNameText = this.add.text(otherPlayer.x, otherPlayer.y - 40, "OtherPlayer", {
-    fontSize: "14px", fill: "#fff", stroke: "#000", strokeThickness: 2
-  }).setOrigin(0.5);
+  otherNameText = this.add.text(0, 0, "OtherPlayer", {
+    fontSize: "14px",
+    fill: "#fff",
+    stroke: "#000",
+    strokeThickness: 2
+  }).setOrigin(0.5).setScrollFactor(1);
 
   this.physics.add.collider(player, ground);
   this.physics.add.collider(otherPlayer, ground);
   this.physics.add.collider(player, otherPlayer);
 
+  // Animations
   this.anims.create({
-    key: "left", frames: this.anims.generateFrameNumbers(selectedSpriteKey, { start: 0, end: 3 }),
+    key: "left", frames: this.anims.generateFrameNumbers(spriteKey, { start: 0, end: 3 }),
     frameRate: 10, repeat: -1
   });
   this.anims.create({
-    key: "turn", frames: [ { key: selectedSpriteKey, frame: 4 } ],
+    key: "turn", frames: [ { key: spriteKey, frame: 4 } ],
     frameRate: 20
   });
   this.anims.create({
-    key: "right", frames: this.anims.generateFrameNumbers(selectedSpriteKey, { start: 5, end: 8 }),
+    key: "right", frames: this.anims.generateFrameNumbers(spriteKey, { start: 5, end: 8 }),
     frameRate: 10, repeat: -1
   });
 
@@ -121,6 +131,7 @@ function create() {
 function update() {
   if (selectorMode) return;
 
+  // Movement and animation
   if (cursors.left.isDown) {
     player.setVelocityX(-160);
     player.anims.play("left", true);
@@ -145,6 +156,7 @@ function update() {
     setTimeout(() => fb.destroy(), 2000);
   }
 
+  // Name tag tracking
   playerNameText.setPosition(player.x, player.y - 40);
   otherNameText.setPosition(otherPlayer.x, otherPlayer.y - 40);
 }
