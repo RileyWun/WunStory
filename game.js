@@ -11,9 +11,7 @@ const config = {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH
   },
-  dom: {
-    createContainer: true
-  },
+  dom: { createContainer: true },
   scene: { preload, create, update }
 };
 
@@ -23,7 +21,7 @@ let playerName = prompt("Enter your name:") || "Player";
 let chatMessages = [];
 let isTyping = false;
 let chatContainer, chatTextLines = [];
-let domChatInput;
+let inputEl;
 
 const game = new Phaser.Game(config);
 
@@ -100,13 +98,12 @@ function create() {
     chatTextLines.push(line);
   }
 
-  // DOM chat input
-  domChatInput = this.add.dom(180, 170).createFromHTML(
+  const domChatInput = this.add.dom(180, 170).createFromHTML(
     '<input type="text" id="phaserChatInput" placeholder="Type a message..." style="width:320px; padding:5px; font-size:14px;">'
   ).setOrigin(0.5);
   chatContainer.add(domChatInput);
+  inputEl = domChatInput.getChildByName("phaserChatInput");
 
-  const inputEl = domChatInput.getChildByName("phaserChatInput");
   inputEl.addEventListener("focus", () => { isTyping = true; });
   inputEl.addEventListener("blur", () => { isTyping = false; });
   inputEl.addEventListener("keydown", (e) => {
@@ -117,7 +114,7 @@ function create() {
         chatMessages.push(full);
         chatMessages = chatMessages.slice(-8);
         updateChat();
-        showOtherPlayerReply(scene, "Got it!");
+        showOtherPlayerReply(scene, "Nice!");
         inputEl.value = "";
       }
     }
