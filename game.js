@@ -105,22 +105,45 @@ function create() {
   fireballs = this.physics.add.group();
 
   this.cameras.main.startFollow(player, true, 0.08, 0.08);
-// Inventory UI
+});
+
+// Inventory UI (toggle with "I")
 inventoryContainer = this.add.container(100, 100).setScrollFactor(0).setDepth(10).setVisible(false);
 
-// Background panel
+// Create background panel
 const bg = this.add.rectangle(0, 0, 200, 200, 0x222222, 0.9).setOrigin(0);
 inventoryContainer.add(bg);
 
-// Close button
-const closeText = this.add.text(180, 0, "✖", {
-  fontSize: "16px", fill: "#fff", backgroundColor: "#900", padding: { left: 4, right: 4 }
+// Close button (top-right ✖)
+const closeButton = this.add.text(180, 0, "✖", {
+  fontSize: "16px",
+  fill: "#fff",
+  backgroundColor: "#900",
+  padding: { left: 5, right: 5, top: 2, bottom: 2 }
 }).setOrigin(0).setInteractive();
-closeText.on("pointerdown", () => {
+
+closeButton.on("pointerdown", () => {
   inventoryContainer.setVisible(false);
   inventoryOpen = false;
 });
-inventoryContainer.add(closeText);
+
+inventoryContainer.add(closeButton);
+
+// Add item icons (same logic you had before)
+items.forEach((key, i) => {
+  const icon = this.add.image(20 + (i % 4) * 45, 40 + Math.floor(i / 4) * 45, key)
+    .setOrigin(0)
+    .setScale(1.2);
+  inventoryContainer.add(icon);
+});
+
+// Drag support
+this.input.setDraggable(inventoryContainer);
+this.input.on("drag", (pointer, gameObject, dragX, dragY) => {
+  if (gameObject === inventoryContainer) {
+    inventoryContainer.setPosition(dragX, dragY);
+  }
+});
 
 // Mock items (update with your existing logic or icons)
 items.forEach((key, i) => {
