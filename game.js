@@ -35,9 +35,11 @@ function preload() {
     this.load.spritesheet(`pants_${c}`, `assets/pants_${c}.png`, { frameWidth: 32, frameHeight: 48 })
   );
 
-  ["sword", "potion", "shirt"].forEach(item =>
-    this.load.image(`item_${item}`, `assets/item_${item}.png`)
-  );
+  // Inventory item images
+  this.load.image("item_hat_red", "assets/item_hat_red.png");
+  this.load.image("item_potion", "assets/item_potion.png");
+  this.load.image("item_top_blue", "assets/item_top_blue.png");
+  this.load.image("item_sword", "assets/item_sword.png");
 }
 
 function create() {
@@ -104,15 +106,8 @@ function create() {
 
   this.cameras.main.startFollow(player, true, 0.08, 0.08);
 
-  // Call inventory UI from external file
-  if (typeof initInventoryUI === "function") {
-    initInventoryUI(this);
-  }
-  
-  // Call equipment UI from external file
-  if (typeof initEquipmentUI === "function") {
-  initEquipmentUI(this);
-  }
+  if (typeof initInventoryUI === "function") initInventoryUI(this);
+  if (typeof initEquipmentUI === "function") initEquipmentUI(this);
 }
 
 function update() {
