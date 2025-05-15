@@ -17,10 +17,9 @@ const config = {
 let player, bodyLayer, shirtLayer, pantsLayer;
 let otherPlayer;
 let playerNameText, otherNameText;
-let cursors, spaceBar, fireballs;
-let selectorMode = false;
-const characterOptions = ['blue', 'green', 'red'];
-let frameIndex = 4;
+let cursors, spaceBar, fireballs, inventoryKey;
+let inventoryContainer, inventoryOpen = false;
+let items = ["item_sword", "item_potion", "item_shirt"];
 
 const game = new Phaser.Game(config);
 
@@ -30,24 +29,23 @@ function preload() {
   this.load.image("fireball", "assets/fireball.png");
 
   this.load.spritesheet("body_base", "assets/body_base.png", { frameWidth: 32, frameHeight: 48 });
-
   ["red", "blue", "green"].forEach(c =>
     this.load.spritesheet(`shirt_${c}`, `assets/shirt_${c}.png`, { frameWidth: 32, frameHeight: 48 })
   );
-
   ["blue", "black", "grey"].forEach(c =>
     this.load.spritesheet(`pants_${c}`, `assets/pants_${c}.png`, { frameWidth: 32, frameHeight: 48 })
+  );
+
+  ["sword", "potion", "shirt"].forEach(item =>
+    this.load.image(`item_${item}`, `assets/item_${item}.png`)
   );
 }
 
 function create() {
   const scene = this;
 
-  let playerName = localStorage.getItem("playerName");
-  if (!playerName) {
-    playerName = prompt("Enter your name:") || "Player";
-    localStorage.setItem("playerName", playerName);
-  }
+  let playerName = localStorage.getItem("playerName") || prompt("Enter your name:") || "Player";
+  localStorage.setItem("playerName", playerName);
 
   let shirtColor = localStorage.getItem("shirtColor") || "red";
   let pantsColor = localStorage.getItem("pantsColor") || "blue";
@@ -63,55 +61,33 @@ function create() {
     ground.create(x + 200, 1784, "ground").setScale(2).refreshBody();
   }
 
-  // Base physics sprite
   player = this.physics.add.sprite(100, 450, "body_base");
   player.setBounce(0.1);
   player.setCollideWorldBounds(true);
   player.body.checkCollision.left = false;
   player.body.checkCollision.right = false;
 
-  // Name tag
   playerNameText = this.add.text(player.x, player.y - 40, playerName, {
     fontSize: "14px", fill: "#fff", stroke: "#000", strokeThickness: 2
   }).setOrigin(0.5).setScrollFactor(1);
 
-  // Outfit layers follow the base
+  // Layered appearance
   bodyLayer = this.add.sprite(player.x, player.y, "body_base").setOrigin(0.5);
   shirtLayer = this.add.sprite(player.x, player.y, `shirt_${shirtColor}`).setOrigin(0.5);
   pantsLayer = this.add.sprite(player.x, player.y, `pants_${pantsColor}`).setOrigin(0.5);
 
-  // Sync animation frames
-  scene.anims.create({
-    key: "walk",
-    frames: scene.anims.generateFrameNumbers("body_base", { start: 0, end: 3 }),
-    frameRate: 10,
-    repeat: -1
-  });
-  scene.anims.create({
-    key: "turn",
-    frames: [ { key: "body_base", frame: 4 } ],
-    frameRate: 20
-  });
+  this.anims.create({ key: "walk", frames: this.anims.generateFrameNumbers("body_base", { start: 0, end: 3 }), frameRate: 10, repeat: -1 });
+  this.anims.create({ key: "turn", frames: [ { key: "body_base", frame: 4 } ], frameRate: 20 });
 
   ["shirt", "pants"].forEach(type => {
     ["red", "blue", "green", "black", "grey"].forEach(c => {
       if (scene.textures.exists(`${type}_${c}`)) {
-        scene.anims.create({
-          key: `${type}_${c}_walk`,
-          frames: scene.anims.generateFrameNumbers(`${type}_${c}`, { start: 0, end: 3 }),
-          frameRate: 10,
-          repeat: -1
-        });
-        scene.anims.create({
-          key: `${type}_${c}_turn`,
-          frames: [ { key: `${type}_${c}`, frame: 4 } ],
-          frameRate: 20
-        });
+        scene.anims.create({ key: `${type}_${c}_walk`, frames: scene.anims.generateFrameNumbers(`${type}_${c}`, { start: 0, end: 3 }), frameRate: 10, repeat: -1 });
+        scene.anims.create({ key: `${type}_${c}_turn`, frames: [ { key: `${type}_${c}`, frame: 4 } ], frameRate: 20 });
       }
     });
   });
 
-  // Simulated other player
   otherPlayer = this.physics.add.sprite(300, 450, "body_base");
   otherPlayer.setBounce(0.1);
   otherPlayer.setCollideWorldBounds(true);
@@ -125,25 +101,51 @@ function create() {
 
   cursors = this.input.keyboard.createCursorKeys();
   spaceBar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+  inventoryKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.I);
   fireballs = this.physics.add.group();
 
   this.cameras.main.startFollow(player, true, 0.08, 0.08);
+
+  // Inventory UI
+  inventoryContainer = this.add.container(100, 100).setScrollFactor(0).setDepth(10).setVisible(false);
+
+  const bg = this.add.rectangle(0, 0, 200, 200, 0x222222, 0.9).setOrigin(0);
+  bg.setInteractive({ draggable: true });
+  bg.on("drag", (pointer, dragX, dragY) => inventoryContainer.setPosition(dragX, dragY));
+  inventoryContainer.add(bg);
+
+  const closeText = this.add.text(180, 0, "✖", {
+    fontSize: "16px", fill: "#fff"
+  }).setInteractive();
+  closeText.on("pointerdown", () => {
+    inventoryContainer.setVisible(false);
+    inventoryOpen = false;
+  });
+  inventoryContainer.add(closeText);
+
+  // Mock items
+  items.forEach((key, i) => {
+    const icon = this.add.image(20 + (i % 4) * 45, 40 + Math.floor(i / 4) * 45, key).setOrigin(0).setScale(1.2);
+    inventoryContainer.add(icon);
+  });
 }
 
 function update() {
-  if (selectorMode) return;
+  if (Phaser.Input.Keyboard.JustDown(inventoryKey)) {
+    inventoryOpen = !inventoryOpen;
+    inventoryContainer.setVisible(inventoryOpen);
+  }
 
+  // Movement
   let moving = false;
   if (cursors.left.isDown) {
     player.setVelocityX(-160);
     moving = true;
-    player.flipX = true;
-    bodyLayer.flipX = shirtLayer.flipX = pantsLayer.flipX = true;
+    player.flipX = bodyLayer.flipX = shirtLayer.flipX = pantsLayer.flipX = true;
   } else if (cursors.right.isDown) {
     player.setVelocityX(160);
     moving = true;
-    player.flipX = false;
-    bodyLayer.flipX = shirtLayer.flipX = pantsLayer.flipX = false;
+    player.flipX = bodyLayer.flipX = shirtLayer.flipX = pantsLayer.flipX = false;
   } else {
     player.setVelocityX(0);
   }
@@ -159,13 +161,11 @@ function update() {
     setTimeout(() => fb.destroy(), 2000);
   }
 
-  // Sync layer positions
-const { x, y } = player.body.position;
-[bodyLayer, shirtLayer, pantsLayer].forEach(layer => {
-  layer.setPosition(x + player.width / 2, y + player.height / 2);
-});
+  const { x, y } = player.body.position;
+  [bodyLayer, shirtLayer, pantsLayer].forEach(layer => {
+    layer.setPosition(x + player.width / 2, y + player.height / 2);
+  });
 
-  // Animate layers
   const shirtKey = localStorage.getItem("shirtColor");
   const pantsKey = localStorage.getItem("pantsColor");
 
@@ -179,7 +179,6 @@ const { x, y } = player.body.position;
     pantsLayer.anims.play(`pants_${pantsKey}_turn`);
   }
 
-  // Update name tags
   playerNameText.setPosition(player.x, player.y - 40);
   otherNameText.setPosition(otherPlayer.x, otherPlayer.y - 40);
 }
