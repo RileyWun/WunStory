@@ -1,7 +1,8 @@
+
 const config = {
   type: Phaser.AUTO,
   width: window.innerWidth,
-  height: 800,
+  height: 600,
   parent: 'gameContainer',
   physics: {
     default: 'arcade',
@@ -71,7 +72,6 @@ function create() {
     fontSize: "14px", fill: "#fff", stroke: "#000", strokeThickness: 2
   }).setOrigin(0.5).setScrollFactor(1);
 
-  // Outfit layers
   bodyLayer = this.add.sprite(0, 0, "body_base").setOrigin(0.5);
   shirtLayer = this.add.sprite(0, 0, `shirt_${shirtColor}`).setOrigin(0.5);
   pantsLayer = this.add.sprite(0, 0, `pants_${pantsColor}`).setOrigin(0.5);
@@ -107,7 +107,6 @@ function create() {
 
   this.cameras.main.startFollow(player, true, 0.08, 0.08);
 
-  // Inventory panel
   inventoryContainer = this.add.container(100, 100).setScrollFactor(0).setDepth(10).setVisible(false);
 
   const bg = this.add.rectangle(0, 0, 200, 200, 0x222222, 0.9).setOrigin(0);
@@ -167,7 +166,6 @@ function update() {
     setTimeout(() => fb.destroy(), 2000);
   }
 
-  // Sync clothing and name tag positions
   const { x, y } = player.body.position;
   const centerX = x + player.width / 2;
   const centerY = y + player.height / 2;
