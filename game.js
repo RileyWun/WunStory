@@ -35,7 +35,7 @@ function preload() {
     this.load.spritesheet(`pants_${c}`, `assets/pants_${c}.png`, { frameWidth: 32, frameHeight: 48 })
   );
 
-  // Inventory item images
+  // Load known item icons
   this.load.image("item_hat_red", "assets/item_hat_red.png");
   this.load.image("item_potion", "assets/item_potion.png");
   this.load.image("item_top_blue", "assets/item_top_blue.png");
