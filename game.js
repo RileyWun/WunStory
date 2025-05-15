@@ -108,6 +108,11 @@ function create() {
   if (typeof initInventoryUI === "function") {
     initInventoryUI(this);
   }
+  
+  // Call equipment UI from external file
+  if (typeof initEquipmentUI === "function") {
+  initEquipmentUI(this);
+  }
 }
 
 function update() {
