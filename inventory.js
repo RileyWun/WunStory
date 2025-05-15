@@ -17,17 +17,20 @@ function initInventoryUI(scene) {
   const bg = scene.add.rectangle(0, 0, 200, 200, 0x222222, 0.9).setOrigin(0);
   inventoryContainer.add(bg);
 
-  const closeButton = scene.add.text(180, 0, "✖", {
-    fontSize: "16px",
-    fill: "#fff",
-    backgroundColor: "#900",
-    padding: { left: 5, right: 5, top: 2, bottom: 2 }
-  }).setOrigin(0).setInteractive({ useHandCursor: true });
+const closeButton = scene.add.text(180, 0, "✖", {
+  fontSize: "16px",
+  fill: "#fff",
+  backgroundColor: "#900",
+  padding: { left: 5, right: 5, top: 2, bottom: 2 }
+}).setOrigin(0).setInteractive({ useHandCursor: true });
 
-  closeButton.on("pointerdown", () => {
-    inventoryContainer.setVisible(false);
-    inventoryOpen = false;
-  });
+closeButton.setDepth(999); // Ensure it's above other UI elements
+
+closeButton.on("pointerdown", () => {
+  console.log("Close button clicked");
+  inventoryContainer.setVisible(false);
+  inventoryOpen = false;
+});
 
   inventoryContainer.add(closeButton);
 
