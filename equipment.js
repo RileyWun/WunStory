@@ -25,20 +25,21 @@ function initEquipmentUI(scene) {
   ];
 
   slots.forEach(slot => {
-    const zone = scene.add.image(slot.x, slot.y, "").setOrigin(0.5);
-    zone.setDisplaySize(32, 32);
-    zone.setInteractive();
+    const zone = scene.add.rectangle(slot.x, slot.y, 32, 32, 0x444444, 0.8)
+      .setOrigin(0.5)
+      .setInteractive();
     zone.slotName = slot.slotName;
     zone.accepts = slot.accepts;
-    zone.setTint(0x333333);
-
     zone.input.dropZone = true;
 
-    zone.on("pointerover", () => zone.setTint(0x666666));
-    zone.on("pointerout", () => zone.setTint(0x333333));
-
+    scene.input.setDraggable(zone);
     equipmentContainer.add(zone);
     window.equipmentSlots.push(zone);
+
+    const label = scene.add.text(slot.x, slot.y + 20, slot.slotName.toUpperCase(), {
+      fontSize: "10px", fill: "#ccc"
+    }).setOrigin(0.5);
+    equipmentContainer.add(label);
   });
 
   equipTitleBar = scene.add.rectangle(350, 100, 220, 20, 0x111111, 1).setOrigin(0).setInteractive();
@@ -69,12 +70,13 @@ function initEquipmentUI(scene) {
     equipmentOpen = false;
   });
 
-  // Handle drop
   scene.input.on("drop", (pointer, gameObject, dropZone) => {
     if (!dropZone || !dropZone.accepts || !gameObject.itemType) return;
     if (dropZone.accepts === gameObject.itemType) {
-      dropZone.setTexture(gameObject.itemKey);
-      dropZone.itemKey = gameObject.itemKey;
+      const icon = scene.add.image(dropZone.x, dropZone.y, gameObject.itemKey)
+        .setOrigin(0.5)
+        .setScale(1.2);
+      equipmentContainer.add(icon);
       console.log(`Equipped ${gameObject.itemKey} to ${dropZone.slotName}`);
     } else {
       console.log(`Cannot equip ${gameObject.itemKey} to ${dropZone.slotName}`);
