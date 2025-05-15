@@ -1,7 +1,6 @@
 
 let equipmentContainer;
 let equipmentOpen = false;
-let equipmentTitleBar, equipmentCloseButton;
 window.equipmentSlots = [];
 
 function initEquipmentUI(scene) {
@@ -11,43 +10,40 @@ function initEquipmentUI(scene) {
   const bg = scene.add.rectangle(0, 0, 260, 300, 0x1c1c1c, 0.95).setOrigin(0);
   equipmentContainer.add(bg);
 
-  // Title Bar
-  equipmentTitleBar = scene.add.rectangle(0, 0, 260, 20, 0x111111).setOrigin(0).setInteractive();
-  scene.input.setDraggable(equipmentTitleBar);
-  equipmentContainer.add(equipmentTitleBar);
+  // Title bar inside the container
+  const titleBar = scene.add.rectangle(0, 0, 260, 20, 0x111111).setOrigin(0).setInteractive();
+  equipmentContainer.add(titleBar);
+  scene.input.setDraggable(titleBar);
 
-  // Close Button
-  equipmentCloseButton = scene.add.text(240, 2, "✖", {
+  const closeButton = scene.add.text(240, 2, "✖", {
     fontSize: "14px", fill: "#fff", backgroundColor: "#900",
     padding: { left: 4, right: 4, top: 1, bottom: 1 }
   }).setOrigin(0).setInteractive({ useHandCursor: true });
-  equipmentContainer.add(equipmentCloseButton);
+  equipmentContainer.add(closeButton);
 
-  equipmentCloseButton.on("pointerdown", () => {
+  closeButton.on("pointerdown", () => {
     equipmentContainer.setVisible(false);
-    equipmentTitleBar.setVisible(false);
-    equipmentCloseButton.setVisible(false);
     equipmentOpen = false;
   });
 
-  // Drag logic
   scene.input.on("drag", (pointer, gameObject, dragX, dragY) => {
-    if (gameObject === equipmentTitleBar) {
-      equipmentContainer.setPosition(dragX, dragY + 20);
-      equipmentTitleBar.setPosition(dragX, dragY);
-      equipmentCloseButton.setPosition(dragX + 240, dragY);
+    if (gameObject === titleBar) {
+      equipmentContainer.setPosition(dragX, dragY);
     }
   });
 
-  // Slots
+  // Simulated character preview
+  const preview = scene.add.rectangle(130, 120, 40, 60, 0xaaaaaa).setOrigin(0.5);
+  equipmentContainer.add(preview);
+
   const slots = [
-    { slotName: "hat", x: 110, y: 30, accepts: "hat" },
-    { slotName: "face", x: 110, y: 55, accepts: "face" },
-    { slotName: "top", x: 30, y: 100, accepts: "top" },
-    { slotName: "bottom", x: 30, y: 130, accepts: "bottom" },
-    { slotName: "shoes", x: 30, y: 160, accepts: "shoes" },
-    { slotName: "gloves", x: 190, y: 100, accepts: "gloves" },
-    { slotName: "weapon", x: 190, y: 140, accepts: "weapon" }
+    { slotName: "hat", x: 130, y: 30, accepts: "hat" },
+    { slotName: "face", x: 130, y: 55, accepts: "face" },
+    { slotName: "top", x: 40, y: 100, accepts: "top" },
+    { slotName: "bottom", x: 40, y: 130, accepts: "bottom" },
+    { slotName: "shoes", x: 40, y: 160, accepts: "shoes" },
+    { slotName: "gloves", x: 210, y: 100, accepts: "gloves" },
+    { slotName: "weapon", x: 210, y: 140, accepts: "weapon" }
   ];
 
   slots.forEach(slot => {
@@ -59,12 +55,13 @@ function initEquipmentUI(scene) {
     window.equipmentSlots.push(zone);
 
     const label = scene.add.text(slot.x, slot.y + 18, slot.slotName.toUpperCase(), {
-      fontSize: "10px", fill: "#ccc"
+      fontSize: "10px",
+      fill: "#ccc"
     }).setOrigin(0.5);
     equipmentContainer.add(label);
   });
 
-  // Handle item drop
+  // Handle item drop into slot
   scene.input.on("drop", (pointer, gameObject, dropZone) => {
     if (!dropZone || !dropZone.accepts || !gameObject.itemType) return;
     if (dropZone.accepts === gameObject.itemType) {
@@ -76,15 +73,9 @@ function initEquipmentUI(scene) {
     }
   });
 
-  // Toggle
+  // Toggle with E key
   scene.input.keyboard.on("keydown-E", () => {
     equipmentOpen = !equipmentOpen;
     equipmentContainer.setVisible(equipmentOpen);
-    equipmentTitleBar.setVisible(equipmentOpen);
-    equipmentCloseButton.setVisible(equipmentOpen);
-
-    const pos = equipmentContainer.getBounds();
-    equipmentTitleBar.setPosition(pos.x, pos.y - 20);
-    equipmentCloseButton.setPosition(pos.x + 240, pos.y - 20);
   });
 }
