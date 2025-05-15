@@ -5,30 +5,38 @@ window.equipmentSlots = [];
 
 function initEquipmentUI(scene) {
   equipmentContainer = scene.add.container(350, 120).setScrollFactor(0).setDepth(10).setVisible(false);
-  equipmentContainer.setSize(240, 280);
+  const width = 240;
+  const height = 280;
 
-  const background = scene.add.rectangle(0, 0, 240, 280, 0x1c1c1c, 0.95).setOrigin(0);
-  const titleBar = scene.add.rectangle(0, 0, 240, 20, 0x111111).setOrigin(0).setInteractive();
-  const closeButton = scene.add.text(220, 2, "✖", {
+  const background = scene.add.rectangle(0, 0, width, height, 0x1c1c1c, 0.95).setOrigin(0);
+  equipmentContainer.add(background);
+
+  // Title bar inside container
+  const titleBar = scene.add.rectangle(0, 0, width, 20, 0x111111).setOrigin(0).setInteractive();
+  equipmentContainer.add(titleBar);
+
+  // Make the container draggable by the titleBar
+  titleBar.input.draggable = true;
+  scene.input.setDraggable(titleBar);
+  scene.input.on("drag", (pointer, gameObject, dragX, dragY) => {
+    if (gameObject === titleBar) {
+      equipmentContainer.x = dragX;
+      equipmentContainer.y = dragY;
+    }
+  });
+
+  const closeButton = scene.add.text(width - 20, 2, "✖", {
     fontSize: "14px",
     fill: "#fff",
     backgroundColor: "#900",
     padding: { left: 4, right: 4, top: 1, bottom: 1 }
   }).setOrigin(0).setInteractive({ useHandCursor: true });
 
-  equipmentContainer.add([background, titleBar, closeButton]);
-
   closeButton.on("pointerdown", () => {
     equipmentContainer.setVisible(false);
     equipmentOpen = false;
   });
-
-  scene.input.setDraggable(titleBar);
-  scene.input.on("drag", (pointer, gameObject, dragX, dragY) => {
-    if (gameObject === titleBar) {
-      equipmentContainer.setPosition(dragX, dragY);
-    }
-  });
+  equipmentContainer.add(closeButton);
 
   const playerPreview = scene.add.rectangle(120, 110, 40, 60, 0xaaaaaa).setOrigin(0.5);
   equipmentContainer.add(playerPreview);
@@ -63,9 +71,12 @@ function initEquipmentUI(scene) {
   scene.input.on("drop", (pointer, gameObject, dropZone) => {
     if (!dropZone || !dropZone.accepts || !gameObject.itemType) return;
     if (dropZone.accepts === gameObject.itemType) {
-      const icon = scene.add.image(dropZone.x, dropZone.y, gameObject.itemKey)
-        .setOrigin(0.5)
-        .setScale(1.2);
+      const icon = scene.make.image({
+        x: dropZone.x,
+        y: dropZone.y,
+        key: gameObject.itemKey,
+        add: false
+      }).setOrigin(0.5).setScale(1.2);
       equipmentContainer.add(icon);
       console.log(`Equipped ${gameObject.itemKey} to ${dropZone.slotName}`);
     } else {
