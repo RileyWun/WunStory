@@ -105,29 +105,36 @@ function create() {
   fireballs = this.physics.add.group();
 
   this.cameras.main.startFollow(player, true, 0.08, 0.08);
+// Inventory UI
+inventoryContainer = this.add.container(100, 100).setScrollFactor(0).setDepth(10).setVisible(false);
 
-  // Inventory UI
-  inventoryContainer = this.add.container(100, 100).setScrollFactor(0).setDepth(10).setVisible(false);
+// Background panel
+const bg = this.add.rectangle(0, 0, 200, 200, 0x222222, 0.9).setOrigin(0);
+inventoryContainer.add(bg);
 
-  const bg = this.add.rectangle(0, 0, 200, 200, 0x222222, 0.9).setOrigin(0);
-  bg.setInteractive({ draggable: true });
-  bg.on("drag", (pointer, dragX, dragY) => inventoryContainer.setPosition(dragX, dragY));
-  inventoryContainer.add(bg);
+// Close button
+const closeText = this.add.text(180, 0, "✖", {
+  fontSize: "16px", fill: "#fff", backgroundColor: "#900", padding: { left: 4, right: 4 }
+}).setOrigin(0).setInteractive();
+closeText.on("pointerdown", () => {
+  inventoryContainer.setVisible(false);
+  inventoryOpen = false;
+});
+inventoryContainer.add(closeText);
 
-  const closeText = this.add.text(180, 0, "✖", {
-    fontSize: "16px", fill: "#fff"
-  }).setInteractive();
-  closeText.on("pointerdown", () => {
-    inventoryContainer.setVisible(false);
-    inventoryOpen = false;
-  });
-  inventoryContainer.add(closeText);
+// Mock items (update with your existing logic or icons)
+items.forEach((key, i) => {
+  const icon = this.add.image(20 + (i % 4) * 45, 40 + Math.floor(i / 4) * 45, key).setOrigin(0).setScale(1.2);
+  inventoryContainer.add(icon);
+});
 
-  // Mock items
-  items.forEach((key, i) => {
-    const icon = this.add.image(20 + (i % 4) * 45, 40 + Math.floor(i / 4) * 45, key).setOrigin(0).setScale(1.2);
-    inventoryContainer.add(icon);
-  });
+// Enable dragging the inventory panel
+this.input.setDraggable(inventoryContainer);
+this.input.on("drag", (pointer, gameObject, dragX, dragY) => {
+  if (gameObject === inventoryContainer) {
+    inventoryContainer.setPosition(dragX, dragY);
+  }
+});
 }
 
 function update() {
