@@ -6,7 +6,6 @@ window.equipmentSlots = [];
 function initEquipmentUI(scene) {
   equipmentContainer = scene.add.container(350, 120).setScrollFactor(0).setDepth(10).setVisible(false);
   equipmentContainer.setSize(260, 320);
-  scene.input.setDraggable(equipmentContainer);
 
   const bg = scene.add.rectangle(0, 0, 260, 320, 0x1c1c1c, 0.95).setOrigin(0);
   equipmentContainer.add(bg);
@@ -14,6 +13,7 @@ function initEquipmentUI(scene) {
   const titleBar = scene.add.rectangle(0, 0, 260, 20, 0x111111).setOrigin(0).setInteractive();
   titleBar.input.cursor = "pointer";
   equipmentContainer.add(titleBar);
+  scene.input.setDraggable(titleBar);
 
   const closeButton = scene.add.text(238, 2, "✖", {
     fontSize: "14px", fill: "#fff", backgroundColor: "#900",
@@ -26,8 +26,9 @@ function initEquipmentUI(scene) {
     equipmentOpen = false;
   });
 
+  // Fix drag: move the whole container when dragging titleBar only
   scene.input.on("drag", (pointer, gameObject, dragX, dragY) => {
-    if (gameObject === equipmentContainer) {
+    if (gameObject === titleBar) {
       equipmentContainer.setPosition(dragX, dragY);
     }
   });
@@ -52,7 +53,6 @@ function initEquipmentUI(scene) {
     zone.slotName = slot.slotName;
     zone.accepts = slot.accepts;
     zone.input.dropZone = true;
-
     equipmentContainer.add(zone);
     window.equipmentSlots.push(zone);
 
@@ -62,7 +62,7 @@ function initEquipmentUI(scene) {
     equipmentContainer.add(label);
   });
 
-  // Handle drop logic
+  // Handle item drop
   scene.input.on("drop", (pointer, gameObject, dropZone) => {
     if (!dropZone || !dropZone.accepts || !gameObject.itemType) return;
     if (dropZone.accepts === gameObject.itemType) {
