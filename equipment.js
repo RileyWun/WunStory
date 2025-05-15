@@ -5,15 +5,29 @@ window.equipmentSlots = [];
 
 function initEquipmentUI(scene) {
   const width = 260, height = 320;
+  
+  // Create container and enable drag
   equipmentContainer = scene.add.container(350, 120)
     .setScrollFactor(0)
     .setDepth(10)
     .setVisible(false);
+  
   equipmentContainer.setSize(width, height);
+  equipmentContainer.setInteractive(new Phaser.Geom.Rectangle(0, 0, width, height), Phaser.Geom.Rectangle.Contains);
+  scene.input.setDraggable(equipmentContainer);
+  scene.input.on("drag", (pointer, gameObject, dragX, dragY) => {
+    if (gameObject === equipmentContainer) {
+      equipmentContainer.setPosition(dragX, dragY);
+    }
+  });
 
-  // Background panel
+  // Background
   const bg = scene.add.rectangle(0, 0, width, height, 0x1c1c1c, 0.95).setOrigin(0);
   equipmentContainer.add(bg);
+
+  // Title bar
+  const titleBar = scene.add.rectangle(0, 0, width, 20, 0x111111).setOrigin(0);
+  equipmentContainer.add(titleBar);
 
   // Close button
   const closeBtn = scene.add.text(width - 20, 2, "✖", {
@@ -29,10 +43,10 @@ function initEquipmentUI(scene) {
   equipmentContainer.add(closeBtn);
 
   // Player preview
-  const preview = scene.add.rectangle(width / 2, height / 2, 40, 60, 0xaaaaaa).setOrigin(0.5);
+  const preview = scene.add.rectangle(width / 2, 140, 40, 60, 0xaaaaaa).setOrigin(0.5);
   equipmentContainer.add(preview);
 
-  // Define slot positions
+  // Define slots
   const slots = [
     { slotName: "hat", x: width / 2, y: 50, accepts: "hat" },
     { slotName: "face", x: width / 2, y: 80, accepts: "face" },
@@ -43,7 +57,6 @@ function initEquipmentUI(scene) {
     { slotName: "weapon", x: width - 60, y: 180, accepts: "weapon" }
   ];
 
-  // Create slots
   slots.forEach(slot => {
     const zone = scene.add.rectangle(slot.x, slot.y, 32, 32, 0x444444, 0.8)
       .setOrigin(0.5)
@@ -54,19 +67,10 @@ function initEquipmentUI(scene) {
     equipmentContainer.add(zone);
     window.equipmentSlots.push(zone);
 
-    const label = scene.add.text(slot.x, slot.y + 22, slot.slotName.toUpperCase(), {
-      fontSize: "10px",
-      fill: "#ccc"
+    const label = scene.add.text(slot.x, slot.y + 18, slot.slotName.toUpperCase(), {
+      fontSize: "10px", fill: "#ccc"
     }).setOrigin(0.5);
     equipmentContainer.add(label);
-  });
-
-  // Enable dragging the container
-  scene.input.setDraggable(equipmentContainer);
-  scene.input.on("drag", (pointer, gameObject, dragX, dragY) => {
-    if (gameObject === equipmentContainer) {
-      equipmentContainer.setPosition(dragX, dragY);
-    }
   });
 
   // Handle drop events
