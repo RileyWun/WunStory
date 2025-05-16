@@ -18,14 +18,50 @@ const itemData = {
 
 function initInventoryUI(scene) {
   const W = 200, H = 200;
-  // Main container
   inventoryContainer = scene.add.container(100, 120)
-    .setScrollFactor(0).setDepth(10).setVisible(false);
-  // Background
-  const bg = scene.add.rectangle(0, 0, W, H, 0x222222, 0.95).setOrigin(0);
+    .setScrollFactor(0)
+    .setDepth(10)
+    .setVisible(false)
+    .setSize(W, H);
+
+  // Background under title bar
+  const bg = scene.add.rectangle(0, 20, W, H - 20, 0x222222, 0.95).setOrigin(0);
   inventoryContainer.add(bg);
 
-  // Populate items
+  // Title bar (hidden initially)
+  invTitleBar = scene.add.rectangle(0, 0, W, 20, 0x111111)
+    .setOrigin(0)
+    .setInteractive({ useHandCursor: true })
+    .setVisible(false);
+  inventoryContainer.add(invTitleBar);
+  scene.input.setDraggable(invTitleBar);
+
+  // Close button (hidden initially)
+  invCloseBtn = scene.add.text(W - 20, 2, "✖", {
+    fontSize: "14px", fill: "#fff",
+    backgroundColor: "#900", padding: { left:4, right:4, top:1, bottom:1 }
+  })
+    .setOrigin(0)
+    .setInteractive({ useHandCursor: true })
+    .setVisible(false);
+  inventoryContainer.add(invCloseBtn);
+  invCloseBtn.on("pointerdown", () => {
+    inventoryOpen = false;
+    inventoryContainer.setVisible(false);
+    invTitleBar.setVisible(false);
+    invCloseBtn.setVisible(false);
+  });
+
+  // Dragging logic
+  scene.input.on("drag", (pointer, gameObject, dragX, dragY) => {
+    if (gameObject === invTitleBar) {
+      invTitleBar.setPosition(dragX, dragY);
+      invCloseBtn.setPosition(dragX + W - 20, dragY);
+      inventoryContainer.setPosition(dragX, dragY + 20);
+    }
+  });
+
+  // Populate items with manual double-click detection
   items.forEach((item, i) => {
     const x = 10 + (i % 4) * 45;
     const y = 30 + Math.floor(i / 4) * 45;
@@ -37,47 +73,26 @@ function initInventoryUI(scene) {
     scene.input.setDraggable(spr);
     spr.on("dragstart", () => spr.setScale(1.3));
     spr.on("dragend",   () => spr.setScale(1.2));
-    spr.on("pointerup", (pointer) => {
-      if (pointer.event.detail === 2) {
+
+    // Manual double-click
+    let clicks = 0;
+    spr.on("pointerdown", () => {
+      clicks++;
+      if (clicks === 2) {
         if (item.type === "potion") {
           console.log(`Used ${itemData[item.key].name}`);
         } else {
           window.applyEquip && window.applyEquip(item.key, item.type);
         }
+        clicks = 0;
       }
+      scene.time.delayedCall(300, () => { clicks = 0; });
     });
+
     inventoryContainer.add(spr);
   });
 
-  // Title bar
-  invTitleBar = scene.add.rectangle(100, 120, W, 20, 0x111111)
-    .setOrigin(0).setDepth(11).setScrollFactor(0)
-    .setInteractive({ useHandCursor: true });
-  scene.input.setDraggable(invTitleBar);
-
-  // Close button
-  invCloseBtn = scene.add.text(100 + W - 20, 120, "✖", {
-    fontSize:"14px", fill:"#fff",
-    backgroundColor:"#900", padding:{left:4,right:4,top:1,bottom:1}
-  }).setOrigin(0).setDepth(11).setScrollFactor(0)
-    .setInteractive({ useHandCursor: true });
-  invCloseBtn.on("pointerdown", () => {
-    inventoryOpen = false;
-    inventoryContainer.setVisible(false);
-    invTitleBar.setVisible(false);
-    invCloseBtn.setVisible(false);
-  });
-
-  // Drag logic
-  scene.input.on("drag", (p, go, dragX, dragY) => {
-    if (go === invTitleBar) {
-      invTitleBar.setPosition(dragX, dragY);
-      invCloseBtn.setPosition(dragX + W - 20, dragY);
-      inventoryContainer.setPosition(dragX, dragY + 20);
-    }
-  });
-
-  // Toggle inventory
+  // Toggle panel with I
   scene.input.keyboard.on("keydown-I", () => {
     inventoryOpen = !inventoryOpen;
     inventoryContainer.setVisible(inventoryOpen);
