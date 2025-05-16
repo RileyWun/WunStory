@@ -46,25 +46,20 @@ function initInventoryUI(scene) {
     spr.on("dragstart", () => spr.setScale(1.3));
     spr.on("dragend",   () => spr.setScale(1.2));
 
-    // manual double-click on pointerup
+// guaranteed double‐click on pointerdown
     spr.lastClickTime = 0;
-    spr.on("pointerup", () => {
-      const now = Date.now();
-      if (now - spr.lastClickTime < 300) {
-        // double-click detected
-        if (item.type === "potion") {
-          console.log(`Used ${item.key}`);
-        } else {
-          window.applyEquip && window.applyEquip(item.key, item.type);
-        }
-        spr.lastClickTime = 0;
-      } else {
-        spr.lastClickTime = now;
-      }
-    });
-
-    inventoryContainer.add(spr);
-  });
+    spr.on("pointerdown", () => {
+    const now = Date.now();
+if (now - spr.lastClickTime < 300) {
+// double‐click! equip or use
+if (item.type === "potion") {
+console.log(`Used ${item.key}`);
+} else {
+window.applyEquip && window.applyEquip(item.key, item.type);
+}
+}
+spr.lastClickTime = now;
+});
 
   // Title bar (20px high strip above panel)
   invTitleBar = scene.add
