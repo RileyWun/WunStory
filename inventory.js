@@ -1,12 +1,10 @@
+// inventory.js
+
 let inventoryContainer;
 let inventoryOpen = false;
 let invTitleBar, invCloseBtn;
 
-const INV_X = 100;
-const INV_Y = 120;
-const INV_W = 200;
-const INV_H = 200;
-
+const INV_X = 100, INV_Y = 120, INV_W = 200, INV_H = 200;
 const items = [
   { key: "item_hat_red", type: "hat" },
   { key: "item_potion",  type: "potion" },
@@ -15,73 +13,72 @@ const items = [
 ];
 
 function initInventoryUI(scene) {
-  // Main panel
-  inventoryContainer = scene.add
-    .container(INV_X, INV_Y)
+  // ── Panel container ──────────────────────────────────────────────────────
+  inventoryContainer = scene.add.container(INV_X, INV_Y)
     .setScrollFactor(0)
     .setDepth(10)
     .setVisible(false)
     .setSize(INV_W, INV_H);
 
-  // Background under title bar
-  const bg = scene.add
-    .rectangle(0, 0, INV_W, INV_H, 0x222222, 0.95)
-    .setOrigin(0);
+  // background
+  const bg = scene.add.rectangle(0, 0, INV_W, INV_H, 0x222222, 0.95).setOrigin(0);
   inventoryContainer.add(bg);
 
-  // Populate items
+  // ── Items grid with manual double-click ─────────────────────────────────
   items.forEach((item, i) => {
-    const x = 10 + (i % 4) * 45;
-    const y = 30 + Math.floor(i / 4) * 45;
-    const spr = scene.add
-      .image(x, y, item.key)
+    const x = 10 + (i % 4) * 45,
+          y = 30 + Math.floor(i / 4) * 45;
+    const spr = scene.add.image(x, y, item.key)
       .setOrigin(0)
       .setScale(1.2)
       .setInteractive({ draggable: true, useHandCursor: true });
+
     spr.itemKey  = item.key;
     spr.itemType = item.type;
-
-    // draggable visuals
     scene.input.setDraggable(spr);
     spr.on("dragstart", () => spr.setScale(1.3));
     spr.on("dragend",   () => spr.setScale(1.2));
 
-// guaranteed double‐click on pointerdown
-    spr.lastClickTime = 0;
+    // manual double‐click on pointerdown
+    spr.lastClick = 0;
     spr.on("pointerdown", () => {
-    const now = Date.now();
-if (now - spr.lastClickTime < 300) {
-// double‐click! equip or use
-if (item.type === "potion") {
-console.log(`Used ${item.key}`);
-} else {
-window.applyEquip && window.applyEquip(item.key, item.type);
-}
-}
-spr.lastClickTime = now;
-});
+      const now = Date.now();
+      if (now - spr.lastClick < 300) {
+        if (item.type === "potion") {
+          console.log(`Used ${item.key}`);
+        } else {
+          window.applyEquip && window.applyEquip(item.key, item.type);
+        }
+      }
+      spr.lastClick = now;
+    });
 
-  // Title bar (20px high strip above panel)
-  invTitleBar = scene.add
-    .rectangle(INV_X, INV_Y - 20, INV_W, 20, 0x111111)
-    .setOrigin(0)
-    .setDepth(11)
-    .setScrollFactor(0)
-    .setInteractive({ useHandCursor: true })
-    .setVisible(false);
+    inventoryContainer.add(spr);
+  });
+
+  // ── Title bar + close button (both start hidden) ────────────────────────
+  invTitleBar = scene.add.rectangle(
+    INV_X, INV_Y - 20, INV_W, 20, 0x111111
+  ).setOrigin(0)
+   .setDepth(11)
+   .setScrollFactor(0)
+   .setInteractive({ useHandCursor: true })
+   .setVisible(false);
   scene.input.setDraggable(invTitleBar);
 
-  // Close button
-  invCloseBtn = scene.add
-    .text(INV_X + INV_W - 20, INV_Y - 20, "✖", {
-      fontSize:"14px", fill:"#fff",
-      backgroundColor:"#900", padding:{left:4,right:4,top:1,bottom:1}
-    })
-    .setOrigin(0)
-    .setDepth(11)
-    .setScrollFactor(0)
-    .setInteractive({ useHandCursor: true })
-    .setVisible(false);
+  invCloseBtn = scene.add.text(
+    INV_X + INV_W - 20, INV_Y - 20, "✖", {
+      fontSize: "14px",
+      fill: "#fff",
+      backgroundColor: "#900",
+      padding: { left:4, right:4, top:1, bottom:1 }
+    }
+  ).setOrigin(0)
+   .setDepth(11)
+   .setScrollFactor(0)
+   .setInteractive({ useHandCursor: true })
+   .setVisible(false);
+
   invCloseBtn.on("pointerdown", () => {
     inventoryOpen = false;
     inventoryContainer.setVisible(false);
@@ -89,7 +86,7 @@ spr.lastClickTime = now;
     invCloseBtn.setVisible(false);
   });
 
-  // Drag handler moves entire panel
+  // ── Dragging moves entire panel ─────────────────────────────────────────
   scene.input.on("drag", (pointer, go, dragX, dragY) => {
     if (go === invTitleBar) {
       invTitleBar.setPosition(dragX, dragY);
@@ -98,8 +95,9 @@ spr.lastClickTime = now;
     }
   });
 
-  // Toggle with "I"
-  scene.input.keyboard.on("keydown-I", () => {
+  // ── Toggle inventory with the “I” key ───────────────────────────────────
+  const keyI = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.I);
+  keyI.on("down", () => {
     inventoryOpen = !inventoryOpen;
     inventoryContainer.setVisible(inventoryOpen);
     invTitleBar.setVisible(inventoryOpen);
