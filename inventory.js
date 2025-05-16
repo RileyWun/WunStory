@@ -15,63 +15,78 @@ const items = [
 ];
 
 function initInventoryUI(scene) {
-  // main panel
-  inventoryContainer = scene.add.container(INV_X, INV_Y)
-    .setScrollFactor(0).setDepth(10).setVisible(false)
+  // Main panel
+  inventoryContainer = scene.add
+    .container(INV_X, INV_Y)
+    .setScrollFactor(0)
+    .setDepth(10)
+    .setVisible(false)
     .setSize(INV_W, INV_H);
 
-  // background
-  const bg = scene.add.rectangle(0, 0, INV_W, INV_H, 0x222222, 0.95).setOrigin(0);
+  // Background under title bar
+  const bg = scene.add
+    .rectangle(0, 0, INV_W, INV_H, 0x222222, 0.95)
+    .setOrigin(0);
   inventoryContainer.add(bg);
 
-  // items grid
+  // Populate items
   items.forEach((item, i) => {
-    const x = 10 + (i % 4) * 45,
-          y = 30 + Math.floor(i / 4) * 45;
-    const spr = scene.add.image(x, y, item.key)
-      .setOrigin(0).setScale(1.2)
+    const x = 10 + (i % 4) * 45;
+    const y = 30 + Math.floor(i / 4) * 45;
+    const spr = scene.add
+      .image(x, y, item.key)
+      .setOrigin(0)
+      .setScale(1.2)
       .setInteractive({ draggable: true, useHandCursor: true });
     spr.itemKey  = item.key;
     spr.itemType = item.type;
+
+    // draggable visuals
     scene.input.setDraggable(spr);
     spr.on("dragstart", () => spr.setScale(1.3));
     spr.on("dragend",   () => spr.setScale(1.2));
 
     // manual double-click on pointerup
-    let clicks = 0;
+    spr.lastClickTime = 0;
     spr.on("pointerup", () => {
-      clicks++;
-      if (clicks === 2) {
+      const now = Date.now();
+      if (now - spr.lastClickTime < 300) {
+        // double-click detected
         if (item.type === "potion") {
           console.log(`Used ${item.key}`);
         } else {
           window.applyEquip && window.applyEquip(item.key, item.type);
         }
-        clicks = 0;
+        spr.lastClickTime = 0;
+      } else {
+        spr.lastClickTime = now;
       }
-      scene.time.delayedCall(300, () => clicks = 0);
     });
 
     inventoryContainer.add(spr);
   });
 
-  // title bar
-  invTitleBar = scene.add.rectangle(
-    INV_X, INV_Y - 20, INV_W, 20, 0x111111
-  ).setOrigin(0).setDepth(11).setScrollFactor(0)
-   .setInteractive({ useHandCursor: true })
-   .setVisible(false);
+  // Title bar (20px high strip above panel)
+  invTitleBar = scene.add
+    .rectangle(INV_X, INV_Y - 20, INV_W, 20, 0x111111)
+    .setOrigin(0)
+    .setDepth(11)
+    .setScrollFactor(0)
+    .setInteractive({ useHandCursor: true })
+    .setVisible(false);
   scene.input.setDraggable(invTitleBar);
 
-  // close button
-  invCloseBtn = scene.add.text(
-    INV_X + INV_W - 20, INV_Y - 20, "✖", {
+  // Close button
+  invCloseBtn = scene.add
+    .text(INV_X + INV_W - 20, INV_Y - 20, "✖", {
       fontSize:"14px", fill:"#fff",
       backgroundColor:"#900", padding:{left:4,right:4,top:1,bottom:1}
-    }
-  ).setOrigin(0).setDepth(11).setScrollFactor(0)
-   .setInteractive({ useHandCursor: true })
-   .setVisible(false);
+    })
+    .setOrigin(0)
+    .setDepth(11)
+    .setScrollFactor(0)
+    .setInteractive({ useHandCursor: true })
+    .setVisible(false);
   invCloseBtn.on("pointerdown", () => {
     inventoryOpen = false;
     inventoryContainer.setVisible(false);
@@ -79,16 +94,16 @@ function initInventoryUI(scene) {
     invCloseBtn.setVisible(false);
   });
 
-  // dragging
-  scene.input.on("drag", (p, go, dx, dy) => {
+  // Drag handler moves entire panel
+  scene.input.on("drag", (pointer, go, dragX, dragY) => {
     if (go === invTitleBar) {
-      invTitleBar.setPosition(dx, dy);
-      invCloseBtn.setPosition(dx + INV_W - 20, dy);
-      inventoryContainer.setPosition(dx, dy + 20);
+      invTitleBar.setPosition(dragX, dragY);
+      invCloseBtn.setPosition(dragX + INV_W - 20, dragY);
+      inventoryContainer.setPosition(dragX, dragY + 20);
     }
   });
 
-  // toggle I
+  // Toggle with "I"
   scene.input.keyboard.on("keydown-I", () => {
     inventoryOpen = !inventoryOpen;
     inventoryContainer.setVisible(inventoryOpen);
