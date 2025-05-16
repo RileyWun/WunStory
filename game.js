@@ -52,11 +52,11 @@ localStorage.setItem("playerName", playerName);
 localStorage.setItem("shirtColor" , shirtColor);
 localStorage.setItem("pantsColor" , pantsColor);
 
-// Expose the default skin for the UI to pick up
-window.playerSkin = {
-top:    `shirt_${shirtColor}`,
-bottom: `pants_${pantsColor}`
-};
+// ─── expose the player’s default skin for the UI to pick up ───────
+  window.playerSkin = {
+    top:    `shirt_${shirtColor}`,
+    bottom: `pants_${pantsColor}`
+  };
 
   this.add.tileSprite(0, 0, 2400, 1800, "background").setOrigin(0);
   this.physics.world.setBounds(0, 0, 2400, 1800);
