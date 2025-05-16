@@ -1,7 +1,7 @@
 // game.js
 
 const config = {
-  parent: 'gameContainer', 
+  parent: 'gameContainer',
   type: Phaser.AUTO,
   width: 800,
   height: 600,
@@ -12,7 +12,11 @@ const config = {
       debug: false
     }
   },
-  scene: { preload, create, update }
+  scene: {
+    preload: preload,
+    create: create,
+    update: update
+  }
 };
 
 let player;
@@ -35,7 +39,7 @@ function preload() {
   });
   this.load.image('fireball',     'assets/fireball.png');
 
-  // UI preview & inventory assets
+  // UI & preview assets
   this.load.image('body_base',     'assets/body_base.png');
   this.load.image('shirt_red',     'assets/shirt_red.png');
   this.load.image('pants_blue',    'assets/pants_blue.png');
@@ -46,18 +50,17 @@ function preload() {
 }
 
 function create() {
-  // ─── World setup ────────────────────────────────────────────────────────
+  // ── World setup ───────────────────────────────────────────────
   this.physics.world.setBounds(0, 0, 2400, 1800);
   this.cameras.main.setBounds(0, 0, 2400, 1800);
-
-  const bg = this.add.tileSprite(0, 0, 2400, 1800, 'background').setOrigin(0);
+  this.add.tileSprite(0, 0, 2400, 1800, 'background').setOrigin(0);
 
   const ground = this.physics.add.staticGroup();
   for (let x = 0; x < 2400; x += 400) {
     ground.create(x + 200, 1784, 'ground').setScale(2).refreshBody();
   }
 
-  // ─── Player setup ───────────────────────────────────────────────────────
+  // ── Player setup ───────────────────────────────────────────────
   player = this.physics.add.sprite(100, 450, 'character');
   player.setBounce(0.1);
   player.setCollideWorldBounds(true);
@@ -85,37 +88,34 @@ function create() {
   spaceBar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
   fireballs = this.physics.add.group();
 
-  // ─── Name & camera ───────────────────────────────────────────────────────
+  // ── Name & camera ───────────────────────────────────────────────
   playerName = localStorage.getItem("playerName") || prompt("Enter your name:") || "Player";
   localStorage.setItem("playerName", playerName);
-
   nameText = this.add.text(player.x, player.y - 40, playerName, {
     fontSize: '16px',
     fill: '#ffffff',
     stroke: '#000000',
     strokeThickness: 3
   }).setOrigin(0.5);
-
   this.cameras.main.startFollow(player, true, 0.08, 0.08);
 
-  // ─── Persisted skin bootstrap ────────────────────────────────────────────
+  // ── Persisted skin bootstrap ─────────────────────────────────────
   let shirtColor = localStorage.getItem("shirtColor") || "red";
   let pantsColor = localStorage.getItem("pantsColor") || "blue";
   localStorage.setItem("shirtColor", shirtColor);
   localStorage.setItem("pantsColor", pantsColor);
-
   window.playerSkin = {
     top:    `shirt_${shirtColor}`,
     bottom: `pants_${pantsColor}`
   };
 
-  // ─── Initialize UI panels ───────────────────────────────────────────────
+  // ── Initialize UI panels ───────────────────────────────────────
   initInventoryUI(this);
   initEquipmentUI(this);
 }
 
 function update() {
-  // ─── Movement & animations ──────────────────────────────────────────────
+  // ── Movement & animations ──────────────────────────────────────
   if (cursors.left.isDown) {
     player.setVelocityX(-160);
     player.anims.play('left', true);
@@ -128,12 +128,11 @@ function update() {
     player.setVelocityX(0);
     player.anims.play('turn');
   }
-
   if (cursors.up.isDown && player.body.touching.down) {
     player.setVelocityY(-330);
   }
 
-  // ─── Fireball attack ────────────────────────────────────────────────────
+  // ── Fireball attack ────────────────────────────────────────────
   if (Phaser.Input.Keyboard.JustDown(spaceBar)) {
     const fb = fireballs.create(player.x, player.y, 'fireball');
     fb.setVelocityX(lastDirection === 'left' ? -300 : 300);
@@ -141,6 +140,6 @@ function update() {
     setTimeout(() => fb.destroy(), 2000);
   }
 
-  // ─── Name tag follows the player ─────────────────────────────────────────
+  // ── Name tag follows player ─────────────────────────────────────
   nameText.setPosition(player.x, player.y - 40);
 }
