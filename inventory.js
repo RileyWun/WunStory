@@ -15,77 +15,63 @@ const items = [
 ];
 
 function initInventoryUI(scene) {
-  // Main panel container
+  // main panel
   inventoryContainer = scene.add.container(INV_X, INV_Y)
-    .setScrollFactor(0)
-    .setDepth(10)
-    .setVisible(false);
-  inventoryContainer.setSize(INV_W, INV_H);
+    .setScrollFactor(0).setDepth(10).setVisible(false)
+    .setSize(INV_W, INV_H);
 
-  // Panel background (covers entire panel)
+  // background
   const bg = scene.add.rectangle(0, 0, INV_W, INV_H, 0x222222, 0.95).setOrigin(0);
   inventoryContainer.add(bg);
 
-  // Populate items (draggable + double-click)
+  // items grid
   items.forEach((item, i) => {
-    const x = 10 + (i % 4) * 45;
-    const y = 30 + Math.floor(i / 4) * 45;
+    const x = 10 + (i % 4) * 45,
+          y = 30 + Math.floor(i / 4) * 45;
     const spr = scene.add.image(x, y, item.key)
-      .setOrigin(0)
-      .setScale(1.2)
+      .setOrigin(0).setScale(1.2)
       .setInteractive({ draggable: true, useHandCursor: true });
     spr.itemKey  = item.key;
     spr.itemType = item.type;
-
     scene.input.setDraggable(spr);
     spr.on("dragstart", () => spr.setScale(1.3));
     spr.on("dragend",   () => spr.setScale(1.2));
 
-    // Manual double‐click
+    // manual double-click on pointerup
     let clicks = 0;
-    spr.on("pointerdown", () => {
+    spr.on("pointerup", () => {
       clicks++;
       if (clicks === 2) {
         if (item.type === "potion") {
-          console.log(`Used potion: ${item.key}`);
+          console.log(`Used ${item.key}`);
         } else {
           window.applyEquip && window.applyEquip(item.key, item.type);
         }
         clicks = 0;
       }
-      scene.time.delayedCall(300, () => { clicks = 0; });
+      scene.time.delayedCall(300, () => clicks = 0);
     });
 
     inventoryContainer.add(spr);
   });
 
-  // Title bar (20px high strip above container)
+  // title bar
   invTitleBar = scene.add.rectangle(
-    INV_X, INV_Y - 20, INV_W, 20,
-    0x111111
-  )
-  .setOrigin(0)
-  .setDepth(11)
-  .setScrollFactor(0)
-  .setInteractive({ useHandCursor: true })
-  .setVisible(false);
+    INV_X, INV_Y - 20, INV_W, 20, 0x111111
+  ).setOrigin(0).setDepth(11).setScrollFactor(0)
+   .setInteractive({ useHandCursor: true })
+   .setVisible(false);
   scene.input.setDraggable(invTitleBar);
 
-  // Close button on the bar
+  // close button
   invCloseBtn = scene.add.text(
-    INV_X + INV_W - 20, INV_Y - 20,
-    "✖", {
-      fontSize: "14px",
-      fill: "#fff",
-      backgroundColor: "#900",
-      padding: { left:4, right:4, top:1, bottom:1 }
+    INV_X + INV_W - 20, INV_Y - 20, "✖", {
+      fontSize:"14px", fill:"#fff",
+      backgroundColor:"#900", padding:{left:4,right:4,top:1,bottom:1}
     }
-  )
-  .setOrigin(0)
-  .setDepth(11)
-  .setScrollFactor(0)
-  .setInteractive({ useHandCursor: true })
-  .setVisible(false);
+  ).setOrigin(0).setDepth(11).setScrollFactor(0)
+   .setInteractive({ useHandCursor: true })
+   .setVisible(false);
   invCloseBtn.on("pointerdown", () => {
     inventoryOpen = false;
     inventoryContainer.setVisible(false);
@@ -93,16 +79,16 @@ function initInventoryUI(scene) {
     invCloseBtn.setVisible(false);
   });
 
-  // Drag handler: moves the container when you drag the title‐bar
-  scene.input.on("drag", (pointer, go, dragX, dragY) => {
+  // dragging
+  scene.input.on("drag", (p, go, dx, dy) => {
     if (go === invTitleBar) {
-      invTitleBar.setPosition(dragX, dragY);
-      invCloseBtn.setPosition(dragX + INV_W - 20, dragY);
-      inventoryContainer.setPosition(dragX, dragY + 20);
+      invTitleBar.setPosition(dx, dy);
+      invCloseBtn.setPosition(dx + INV_W - 20, dy);
+      inventoryContainer.setPosition(dx, dy + 20);
     }
   });
 
-  // Toggle visibility with "I"
+  // toggle I
   scene.input.keyboard.on("keydown-I", () => {
     inventoryOpen = !inventoryOpen;
     inventoryContainer.setVisible(inventoryOpen);
