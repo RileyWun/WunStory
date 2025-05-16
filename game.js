@@ -20,28 +20,29 @@ let cursors;
 let lastDirection = 'right';
 let fireballs;
 let spaceBar;
-let playerName;
 let nameText;
+let playerName;
 
 const game = new Phaser.Game(config);
 
 function preload() {
-  // Core assets
-  this.load.image('background', 'assets/background.png');
-  this.load.image('ground',     'assets/ground.png');
+  // Core world assets
+  this.load.image('background',   'assets/background.png');
+  this.load.image('ground',       'assets/ground.png');
   this.load.spritesheet('character', 'assets/character.png', {
-    frameWidth: 32, frameHeight: 48
+    frameWidth: 32,
+    frameHeight: 48
   });
-  this.load.image('fireball',   'assets/fireball.png');
+  this.load.image('fireball',     'assets/fireball.png');
 
-  // Inventory & equipment assets
-  this.load.image('body_base',   'assets/body_base.png');
-  this.load.image('shirt_red',   'assets/shirt_red.png');
-  this.load.image('pants_blue',  'assets/pants_blue.png');
-  this.load.image('item_hat_red','assets/item_hat_red.png');
-  this.load.image('item_potion', 'assets/item_potion.png');
-  this.load.image('item_top_blue','assets/item_top_blue.png');
-  this.load.image('item_sword',  'assets/item_sword.png');
+  // UI preview & inventory assets
+  this.load.image('body_base',     'assets/body_base.png');
+  this.load.image('shirt_red',     'assets/shirt_red.png');
+  this.load.image('pants_blue',    'assets/pants_blue.png');
+  this.load.image('item_hat_red',  'assets/item_hat_red.png');
+  this.load.image('item_potion',   'assets/item_potion.png');
+  this.load.image('item_top_blue', 'assets/item_top_blue.png');
+  this.load.image('item_sword',    'assets/item_sword.png');
 }
 
 function create() {
@@ -65,7 +66,8 @@ function create() {
   this.anims.create({
     key: 'left',
     frames: this.anims.generateFrameNumbers('character', { start: 0, end: 3 }),
-    frameRate: 10, repeat: -1
+    frameRate: 10,
+    repeat: -1
   });
   this.anims.create({
     key: 'turn',
@@ -75,12 +77,12 @@ function create() {
   this.anims.create({
     key: 'right',
     frames: this.anims.generateFrameNumbers('character', { start: 5, end: 8 }),
-    frameRate: 10, repeat: -1
+    frameRate: 10,
+    repeat: -1
   });
 
-  cursors   = this.input.keyboard.createCursorKeys();
-  spaceBar  = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-
+  cursors  = this.input.keyboard.createCursorKeys();
+  spaceBar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
   fireballs = this.physics.add.group();
 
   // ─── Name & camera ───────────────────────────────────────────────────────
@@ -88,8 +90,10 @@ function create() {
   localStorage.setItem("playerName", playerName);
 
   nameText = this.add.text(player.x, player.y - 40, playerName, {
-    fontSize: '16px', fill: '#ffffff',
-    stroke: '#000000', strokeThickness: 3
+    fontSize: '16px',
+    fill: '#ffffff',
+    stroke: '#000000',
+    strokeThickness: 3
   }).setOrigin(0.5);
 
   this.cameras.main.startFollow(player, true, 0.08, 0.08);
@@ -111,7 +115,7 @@ function create() {
 }
 
 function update() {
-  // ─── Movement & animation ───────────────────────────────────────────────
+  // ─── Movement & animations ──────────────────────────────────────────────
   if (cursors.left.isDown) {
     player.setVelocityX(-160);
     player.anims.play('left', true);
@@ -124,11 +128,12 @@ function update() {
     player.setVelocityX(0);
     player.anims.play('turn');
   }
+
   if (cursors.up.isDown && player.body.touching.down) {
     player.setVelocityY(-330);
   }
 
-  // ─── Fireball attack ───────────────────────────────────────────────────
+  // ─── Fireball attack ────────────────────────────────────────────────────
   if (Phaser.Input.Keyboard.JustDown(spaceBar)) {
     const fb = fireballs.create(player.x, player.y, 'fireball');
     fb.setVelocityX(lastDirection === 'left' ? -300 : 300);
@@ -136,6 +141,6 @@ function update() {
     setTimeout(() => fb.destroy(), 2000);
   }
 
-  // ─── Name tag follows ───────────────────────────────────────────────────
+  // ─── Name tag follows the player ─────────────────────────────────────────
   nameText.setPosition(player.x, player.y - 40);
 }
