@@ -1,8 +1,6 @@
 let inventoryContainer;
 let inventoryOpen = false;
-const INVENTORY_KEY = 'I';
-const invStartX = 100, invStartY = 120;
-const INV_W = 200, INV_H = 200;
+let invTitleBar, invCloseBtn;
 
 const items = [
   { key: "item_hat_red", type: "hat" },
@@ -19,41 +17,15 @@ const itemData = {
 };
 
 function initInventoryUI(scene) {
-  inventoryContainer = scene.add.container(invStartX, invStartY)
-    .setScrollFactor(0).setDepth(10).setVisible(false);
-  inventoryContainer.setSize(INV_W, INV_H);
+  // Container
+  inventoryContainer = scene.add.container(100, 140).setScrollFactor(0).setDepth(10).setVisible(false);
+  const W = 200, H = 200;
 
-  // Background under title bar
-  const bg = scene.add.rectangle(0, 20, INV_W, INV_H - 20, 0x222222, 0.95).setOrigin(0);
+  // Background
+  const bg = scene.add.rectangle(0, 0, W, H, 0x222222, 0.95).setOrigin(0);
   inventoryContainer.add(bg);
 
-  // Title bar (drag handle)
-  const titleBar = scene.add.rectangle(0, 0, INV_W, 20, 0x111111)
-    .setOrigin(0).setInteractive({ useHandCursor: true });
-  inventoryContainer.add(titleBar);
-  scene.input.setDraggable(titleBar);
-
-  // Close button
-  const closeBtn = scene.add.text(INV_W - 20, 2, "✖", {
-    fontSize: "14px",
-    fill: "#fff",
-    backgroundColor: "#900",
-    padding: { left:4, right:4, top:1, bottom:1 }
-  }).setOrigin(0).setInteractive({ useHandCursor: true });
-  inventoryContainer.add(closeBtn);
-  closeBtn.on("pointerdown", () => {
-    inventoryContainer.setVisible(false);
-    inventoryOpen = false;
-  });
-
-  // Dragging logic
-  scene.input.on("drag", (pointer, gameObject, dragX, dragY) => {
-    if (gameObject === titleBar) {
-      inventoryContainer.setPosition(dragX, dragY);
-    }
-  });
-
-  // Populate items
+  // Items
   items.forEach((item, i) => {
     const x = 10 + (i % 4) * 45;
     const y = 30 + Math.floor(i / 4) * 45;
@@ -62,13 +34,9 @@ function initInventoryUI(scene) {
       .setInteractive({ draggable: true, useHandCursor: true });
     sprite.itemKey = item.key;
     sprite.itemType = item.type;
-
-    // Enable dragging
     scene.input.setDraggable(sprite);
     sprite.on("dragstart", () => sprite.setScale(1.3));
-    sprite.on("dragend",   () => sprite.setScale(1.2));
-
-    // Double-click to equip/use
+    sprite.on("dragend", () => sprite.setScale(1.2));
     sprite.on("pointerup", (pointer) => {
       if (pointer.event.detail === 2) {
         if (item.type === "potion") {
@@ -78,14 +46,41 @@ function initInventoryUI(scene) {
         }
       }
     });
-
     inventoryContainer.add(sprite);
   });
 
-  // Toggle inventory with I
-  scene.input.keyboard.on(`keydown-${INVENTORY_KEY}`, () => {
+  // Title bar
+  invTitleBar = scene.add.rectangle(100, 120, W, 20, 0x111111)
+    .setOrigin(0).setInteractive({ useHandCursor: true }).setDepth(11).setScrollFactor(0).setVisible(false);
+  scene.input.setDraggable(invTitleBar);
+
+  // Close button
+  invCloseBtn = scene.add.text(100 + W - 20, 120, "✖", {
+    fontSize: "14px", fill: "#fff",
+    backgroundColor: "#900", padding: { left:4, right:4, top:1, bottom:1 }
+  }).setOrigin(0).setDepth(11).setScrollFactor(0).setInteractive({ useHandCursor: true }).setVisible(false);
+  invCloseBtn.on("pointerdown", () => {
+    inventoryOpen = false;
+    inventoryContainer.setVisible(false);
+    invTitleBar.setVisible(false);
+    invCloseBtn.setVisible(false);
+  });
+
+  // Dragging logic
+  scene.input.on("drag", (pointer, go, dragX, dragY) => {
+    if (go === invTitleBar) {
+      invTitleBar.setPosition(dragX, dragY);
+      invCloseBtn.setPosition(dragX + W - 20, dragY);
+      inventoryContainer.setPosition(dragX, dragY + 20);
+    }
+  });
+
+  // Toggle with I
+  scene.input.keyboard.on("keydown-I", () => {
     inventoryOpen = !inventoryOpen;
     inventoryContainer.setVisible(inventoryOpen);
+    invTitleBar.setVisible(inventoryOpen);
+    invCloseBtn.setVisible(inventoryOpen);
   });
 }
 
