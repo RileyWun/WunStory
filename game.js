@@ -33,7 +33,7 @@ function preload() {
   // Core world assets
   this.load.image('background',   'assets/background.png');
   this.load.image('ground',       'assets/ground.png');
-  this.load.spritesheet('character', 'assets/character.png', {
+  this.load.spritesheet('character', 'assets/placeholder_character_sheet.png', {
     frameWidth: 32,
     frameHeight: 48
   });
