@@ -47,6 +47,9 @@ function preload() {
   this.load.image('item_potion',   'assets/item_potion.png');
   this.load.image('item_top_blue', 'assets/item_top_blue.png');
   this.load.image('item_sword',    'assets/item_sword.png');
+  this.load.image('hat_overlay', 'assets/placeholder_hat.png');
+  this.load.image('shirt_overlay', 'assets/placeholder_shirt.png');
+  this.load.image('pants_overlay', 'assets/placeholder_pants.png');
 }
 
 function create() {
