@@ -53,10 +53,7 @@ function preload() {
 }
 
 function create() {
-console.log("About to initInventoryUI?", !!window.initInventoryUI);
-initInventoryUI(this);
-console.log("About to initEquipmentUI?", !!window.initEquipmentUI);
-initEquipmentUI(this);
+  
   // ── World setup ───────────────────────────────────────────────
   this.physics.world.setBounds(0, 0, 2400, 1800);
   this.cameras.main.setBounds(0, 0, 2400, 1800);
