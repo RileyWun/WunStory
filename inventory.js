@@ -4,59 +4,43 @@ let inventoryContainer;
 let inventoryOpen = false;
 let invTitleBar, invCloseBtn;
 
-const INV_X = 100;
-const INV_Y = 120;
-const INV_W = 200;
-const INV_H = 200;
-
 const items = [
-  { key: "item_hat_red",  type: "hat"    },
-  { key: "item_potion",   type: "potion" },
-  { key: "item_top_blue", type: "top"    },
-  { key: "item_sword",    type: "weapon" }
+  { key: "item_hat_red",   type: "hat"    },
+  { key: "item_potion",    type: "potion" },
+  { key: "item_top_blue",  type: "top"    },
+  { key: "item_sword",     type: "weapon" }
 ];
 
 function initInventoryUI(scene) {
-  // ── Container for panel body ─────────────────────────────────────────
-  inventoryContainer = scene.add.container(INV_X, INV_Y)
+  const W = 200, H = 200;
+
+  // Main panel container
+  inventoryContainer = scene.add.container(100, 120)
     .setScrollFactor(0)
     .setDepth(10)
     .setVisible(false);
-  inventoryContainer.setSize(INV_W, INV_H);
+  inventoryContainer.setSize(W, H);
 
-  // Background
-  const bg = scene.add.rectangle(0, 0, INV_W, INV_H, 0x222222, 0.95)
-    .setOrigin(0);
+  // Background under title bar
+  const bg = scene.add.rectangle(0, 20, W, H - 20, 0x222222, 0.95).setOrigin(0);
   inventoryContainer.add(bg);
 
-  // ── Title bar (outside panel) ────────────────────────────────────────
-  invTitleBar = scene.add.rectangle(
-    INV_X, INV_Y - 20,
-    INV_W, 20,
-    0x111111
-  )
-  .setOrigin(0)
-  .setDepth(11)
-  .setScrollFactor(0)
-  .setInteractive({ useHandCursor: true })
-  .setVisible(false);
+  // Title bar (drag handle)
+  invTitleBar = scene.add.rectangle(0, 0, W, 20, 0x111111)
+    .setOrigin(0)
+    .setInteractive({ useHandCursor: true });
+  inventoryContainer.add(invTitleBar);
   scene.input.setDraggable(invTitleBar);
 
   // Close button
-  invCloseBtn = scene.add.text(
-    INV_X + INV_W - 20, INV_Y - 20,
-    "✖", {
-      fontSize:"14px",
-      fill:"#fff",
-      backgroundColor:"#900",
-      padding:{ left:4, right:4, top:1, bottom:1 }
-    }
-  )
-  .setOrigin(0)
-  .setDepth(11)
-  .setScrollFactor(0)
-  .setInteractive({ useHandCursor: true })
-  .setVisible(false);
+  invCloseBtn = scene.add.text(W - 20, 2, "✖", {
+    fontSize: "14px",
+    fill: "#fff",
+    backgroundColor: "#900",
+    padding: { left: 4, right: 4, top: 1, bottom: 1 }
+  }).setOrigin(0)
+    .setInteractive({ useHandCursor: true });
+  inventoryContainer.add(invCloseBtn);
   invCloseBtn.on("pointerdown", () => {
     inventoryOpen = false;
     inventoryContainer.setVisible(false);
@@ -64,54 +48,46 @@ function initInventoryUI(scene) {
     invCloseBtn.setVisible(false);
   });
 
-  // ── Populate items inside the container ──────────────────────────────
-  items.forEach((item, i) => {
-    const x = 10 + (i % 4) * 45;
-    const y = 30 + Math.floor(i / 4) * 45;
-    const spr = scene.add.image(x, y, item.key)
-      .setOrigin(0)
-      .setScale(1.2)
-      .setInteractive({ draggable: true, useHandCursor: true });
-    spr.itemKey  = item.key;
-    spr.itemType = item.type;
-
-    scene.input.setDraggable(spr);
-
-    // Drag: reposition relative to the container
-    spr.on("drag", (pointer, dragX, dragY) => {
-      spr.x = dragX - inventoryContainer.x;
-      spr.y = dragY - inventoryContainer.y;
-    });
-    spr.on("dragstart", () => spr.setScale(1.3));
-    spr.on("dragend",   () => spr.setScale(1.2));
-
-    // Double‐click to equip/use
-    spr.lastClick = 0;
-    spr.on("pointerdown", () => {
-      const now = Date.now();
-      if (now - spr.lastClick < 300) {
-        if (spr.itemType === "potion") {
-          console.log(`Used potion: ${spr.itemKey}`);
-        } else {
-          window.applyEquip && window.applyEquip(spr.itemKey, spr.itemType);
-        }
-      }
-      spr.lastClick = now;
-    });
-
-    inventoryContainer.add(spr);
-  });
-
-  // ── Drag-handler: title bar moves entire panel ───────────────────────
-  scene.input.on("drag", (pointer, go, dragX, dragY) => {
-    if (go === invTitleBar) {
+  // Dragging logic
+  scene.input.on("drag", (pointer, gameObject, dragX, dragY) => {
+    if (gameObject === invTitleBar) {
       invTitleBar.setPosition(dragX, dragY);
-      invCloseBtn.setPosition(dragX + INV_W - 20, dragY);
+      invCloseBtn.setPosition(dragX + W - 20, dragY);
       inventoryContainer.setPosition(dragX, dragY + 20);
     }
   });
 
-  // ── Toggle with I ────────────────────────────────────────────────────
+  // Populate items
+  items.forEach((item, i) => {
+    const x = 10 + (i % 4) * 45;
+    const y = 30 + Math.floor(i / 4) * 45;
+    const sprite = scene.add.image(x, y, item.key)
+      .setOrigin(0)
+      .setScale(1.2)
+      .setInteractive({ draggable: true, useHandCursor: true });
+    sprite.itemKey = item.key;
+    sprite.itemType = item.type;
+
+    // Enable dragging
+    scene.input.setDraggable(sprite);
+    sprite.on("dragstart", () => sprite.setScale(1.3));
+    sprite.on("dragend",   () => sprite.setScale(1.2));
+
+    // Double-click to equip/use
+    sprite.on("pointerup", (pointer) => {
+      if (pointer.event.detail === 2) {
+        if (item.type === "potion") {
+          console.log(`Used ${item.key}`);
+        } else {
+          window.applyEquip && window.applyEquip(item.key, item.type);
+        }
+      }
+    });
+
+    inventoryContainer.add(sprite);
+  });
+
+  // Toggle inventory with I
   scene.input.keyboard.on("keydown-I", () => {
     inventoryOpen = !inventoryOpen;
     inventoryContainer.setVisible(inventoryOpen);
