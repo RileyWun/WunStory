@@ -9,30 +9,31 @@ let previewContainer, layerSprites = {};
 function initEquipmentUI(scene) {
   const W = 260, H = 320;
 
-  // Main container
+  // ─── Panel container ─────────────────────────────────────────────
   equipmentContainer = scene.add.container(350, 120)
     .setScrollFactor(0)
     .setDepth(10)
     .setVisible(false);
   equipmentContainer.setSize(W, H);
 
-  // Background under title bar
-  const bg = scene.add.rectangle(0, 20, W, H - 20, 0x1c1c1c, 0.95).setOrigin(0);
+  // Background (below title-bar)
+  const bg = scene.add.rectangle(0, 20, W, H - 20, 0x1c1c1c, 0.95)
+    .setOrigin(0);
   equipmentContainer.add(bg);
 
-  // Preview container
-  previewContainer = scene.add.container(W/2, 160)
-    .setDepth(11);
+  // ─── Live preview layers ─────────────────────────────────────────
+  previewContainer = scene.add.container(W/2, 160).setDepth(11);
   layerSprites.body = scene.add.sprite(0, 0, 'body_base').setOrigin(0.5);
   ["hat","face","top","bottom","shoes","gloves","weapon"].forEach(slot => {
     layerSprites[slot] = scene.add.sprite(0, 0, null)
-      .setOrigin(0.5).setVisible(false);
+      .setOrigin(0.5)
+      .setVisible(false);
     previewContainer.add(layerSprites[slot]);
   });
   previewContainer.add(layerSprites.body);
   equipmentContainer.add(previewContainer);
 
-  // Slots
+  // ─── Equipment slots ─────────────────────────────────────────────
   const slots = [
     { slotName:"hat",    x: W/2,  y:  50, accepts:"hat"    },
     { slotName:"face",   x: W/2,  y:  80, accepts:"face"   },
@@ -59,7 +60,7 @@ function initEquipmentUI(scene) {
     equipmentContainer.add(label);
   });
 
-  // Title bar
+  // ─── Title-bar (drag handle) ─────────────────────────────────────
   eqTitleBar = scene.add.rectangle(350, 100, W, 20, 0x111111)
     .setOrigin(0)
     .setDepth(11)
@@ -84,7 +85,7 @@ function initEquipmentUI(scene) {
     eqCloseBtn.setVisible(false);
   });
 
-  // Dragging logic
+  // Dragging the title-bar moves the panel
   scene.input.on("drag", (pointer, go, dragX, dragY) => {
     if (go === eqTitleBar) {
       eqTitleBar.setPosition(dragX, dragY);
@@ -93,16 +94,16 @@ function initEquipmentUI(scene) {
     }
   });
 
-  // Drop handler
+  // ─── Handle drops ────────────────────────────────────────────────
   scene.input.on("drop", (pointer, item, dropZone) => {
     if (dropZone.accepts === item.itemType) {
-      // show icon
+      // slot icon
       const icon = scene.make.image({
         x: dropZone.x, y: dropZone.y,
         key: item.itemKey, add: false
       }).setOrigin(0.5).setScale(1.2);
       equipmentContainer.add(icon);
-      // update preview layer
+      // preview layer
       const layer = layerSprites[dropZone.slotName];
       if (layer) {
         layer.setTexture(item.itemKey);
@@ -111,7 +112,7 @@ function initEquipmentUI(scene) {
     }
   });
 
-  // Expose for double-click
+  // ─── Double-click equip helper ───────────────────────────────────
   window.applyEquip = (key, type) => {
     for (const slot of window.equipmentSlots) {
       if (slot.accepts === type) {
@@ -125,7 +126,7 @@ function initEquipmentUI(scene) {
     }
   };
 
-  // Toggle with E
+  // ─── Toggle panel with “E” ────────────────────────────────────────
   scene.input.keyboard.on("keydown-E", () => {
     equipmentOpen = !equipmentOpen;
     equipmentContainer.setVisible(equipmentOpen);
