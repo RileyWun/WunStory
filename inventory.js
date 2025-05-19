@@ -1,32 +1,28 @@
 // inventory.js
 
-let inventoryContainer;
-let inventoryOpen = false;
-let invTitleBar, invCloseBtn;
-let invDragOffsetX = 0, invDragOffsetY = 0;
-
-const INV_X = 100, INV_Y = 120, INV_W = 200, INV_H = 200;
-const items = [
-  { key: "item_hat_red",  type: "hat"    },
-  { key: "item_potion",   type: "potion" },
-  { key: "item_top_blue", type: "top"    },
-  { key: "item_sword",    type: "weapon" }
-];
-
 function initInventoryUI(scene) {
-  // ── 1) Container for background + icons ──────────────────────────────
-  inventoryContainer = scene.add.container(INV_X, INV_Y)
+  const INV_X = 100, INV_Y = 120, INV_W = 200, INV_H = 200;
+  let inventoryOpen = false;
+
+  // ---- Container for the inventory body (below the title bar) ----
+  const invContent = scene.add.container(INV_X, INV_Y + 20)
     .setScrollFactor(0)
     .setDepth(10)
     .setVisible(false);
-  inventoryContainer.setSize(INV_W, INV_H);
 
-  // Background under the title-bar
-  const bg = scene.add.rectangle(0, 20, INV_W, INV_H - 20, 0x222222, 0.95)
+  const bg = scene.add.rectangle(0, 0, INV_W, INV_H, 0x222222, 0.95)
     .setOrigin(0);
-  inventoryContainer.add(bg);
+  invContent.add(bg);
 
-  // Populate icons *inside* the container
+  // ---- Item definitions ----
+  const items = [
+    { key: "item_hat_red",  type: "hat"    },
+    { key: "item_potion",   type: "potion" },
+    { key: "item_top_blue", type: "top"    },
+    { key: "item_sword",    type: "weapon" }
+  ];
+
+  // ---- Create icons inside invContent ----
   items.forEach((item, i) => {
     const x = 10 + (i % 4) * 45;
     const y = 30 + Math.floor(i / 4) * 45;
@@ -37,11 +33,11 @@ function initInventoryUI(scene) {
     icon.itemKey  = item.key;
     icon.itemType = item.type;
 
-    // Drag within container
+    // Drag within the panel
     scene.input.setDraggable(icon);
     icon.on("drag", (pointer, dragX, dragY) => {
-      icon.x = dragX - inventoryContainer.x;
-      icon.y = dragY - inventoryContainer.y;
+      icon.x = dragX - invContent.x;
+      icon.y = dragY - invContent.y;
     });
     icon.on("dragstart", () => icon.setScale(1.3));
     icon.on("dragend",   () => icon.setScale(1.2));
@@ -60,32 +56,26 @@ function initInventoryUI(scene) {
       icon.lastClick = now;
     });
 
-    inventoryContainer.add(icon);
+    invContent.add(icon);
   });
 
-  // ── 2) Title-bar (outside the container) ─────────────────────────────
-  invTitleBar = scene.add.rectangle(
-    INV_X, INV_Y - 20, INV_W, 20, 0x111111
+  // ---- Title bar (above the body) ----
+  const invTitleBar = scene.add.rectangle(
+    INV_X, INV_Y, INV_W, 20, 0x111111
   )
   .setOrigin(0)
   .setDepth(11)
   .setScrollFactor(0)
   .setInteractive({ useHandCursor: true })
   .setVisible(false);
-  scene.input.setDraggable(invTitleBar);
 
-  // When drag starts, record offset from container origin
-  invTitleBar.on("dragstart", (pointer, dragX, dragY) => {
-    invDragOffsetX = dragX - inventoryContainer.x;
-    invDragOffsetY = dragY - inventoryContainer.y;
-  });
-
-  // ── 3) Close button ────────────────────────────────────────────────
-  invCloseBtn = scene.add.text(
-    INV_X + INV_W - 20, INV_Y - 20, "✖", {
-      fontSize:"14px", fill:"#fff",
-      backgroundColor:"#900",
-      padding:{ left:4, right:4, top:1, bottom:1 }
+  // ---- Close button ----
+  const invCloseBtn = scene.add.text(
+    INV_X + INV_W - 20, INV_Y, "✖", {
+      fontSize: "14px",
+      fill: "#fff",
+      backgroundColor: "#900",
+      padding: { left:4, right:4, top:1, bottom:1 }
     }
   )
   .setOrigin(0)
@@ -93,28 +83,39 @@ function initInventoryUI(scene) {
   .setScrollFactor(0)
   .setInteractive({ useHandCursor: true })
   .setVisible(false);
+
+  // Clicking ✖ closes everything
   invCloseBtn.on("pointerdown", () => {
     inventoryOpen = false;
-    inventoryContainer.setVisible(false);
+    invContent.setVisible(false);
     invTitleBar.setVisible(false);
     invCloseBtn.setVisible(false);
   });
 
-  // ── 4) Drag handler: move container and chrome together ────────────
+  // ---- Drag logic for the title bar ----
+  scene.input.setDraggable(invTitleBar);
+  let dragOffsetX = 0, dragOffsetY = 0;
+
+  invTitleBar.on("dragstart", (pointer, dragX, dragY) => {
+    // record offset so the panel doesn't jump
+    dragOffsetX = dragX - invContent.x;
+    dragOffsetY = dragY - invContent.y;
+  });
+
   scene.input.on("drag", (pointer, go, dragX, dragY) => {
     if (go === invTitleBar) {
-      const nx = dragX - invDragOffsetX;
-      const ny = dragY - invDragOffsetY;
-      inventoryContainer.setPosition(nx, ny);
-      invTitleBar.setPosition(nx, ny - 20);
-      invCloseBtn.setPosition(nx + INV_W - 20, ny - 20);
+      const nx = dragX - dragOffsetX;
+      const ny = dragY - dragOffsetY;
+      invContent.setPosition(nx, ny + 20);
+      invTitleBar.setPosition(nx, ny);
+      invCloseBtn.setPosition(nx + INV_W - 20, ny);
     }
   });
 
-  // ── 5) Toggle with I ────────────────────────────────────────────────
+  // ---- Toggle with the "I" key ----
   scene.input.keyboard.on("keydown-I", () => {
     inventoryOpen = !inventoryOpen;
-    inventoryContainer.setVisible(inventoryOpen);
+    invContent.setVisible(inventoryOpen);
     invTitleBar.setVisible(inventoryOpen);
     invCloseBtn.setVisible(inventoryOpen);
   });
